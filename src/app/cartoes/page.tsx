@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, CreditCard, LogOut } from "lucide-react";
 
 export default async function CartoesPage() {
   const supabase = await createClient();
@@ -15,52 +15,83 @@ export default async function CartoesPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Meus Cartões</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">{user.email}</span>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CreditCard size={20} className="text-indigo-600" />
+            <span className="font-bold text-gray-900">Meus Cartões</span>
+          </div>
           <form action="/api/auth/signout" method="post">
-            <button className="text-sm text-red-500 hover:underline">Sair</button>
+            <button className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 transition py-2 px-1">
+              <LogOut size={16} />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
           </form>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <p className="text-gray-600">{cartoes?.length ?? 0} cartões salvos</p>
-          <Link
-            href="/cartoes/novo"
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition"
-          >
-            <Plus size={18} />
-            Adicionar cartão
-          </Link>
-        </div>
-
+      {/* Conteúdo */}
+      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
         {!cartoes || cartoes.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-lg">Nenhum cartão ainda.</p>
-            <p className="text-sm mt-1">Clique em "Adicionar cartão" para começar.</p>
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="bg-indigo-50 rounded-full p-5 mb-4">
+              <CreditCard size={32} className="text-indigo-400" />
+            </div>
+            <p className="text-gray-700 font-medium mb-1">Nenhum cartão ainda</p>
+            <p className="text-sm text-gray-400 mb-6">Adicione o primeiro cartão que você recebeu</p>
+            <Link
+              href="/cartoes/novo"
+              className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition"
+            >
+              <Plus size={18} />
+              Adicionar cartão
+            </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cartoes.map((cartao) => (
-              <Link
-                key={cartao.id}
-                href={`/cartoes/${cartao.id}`}
-                className="bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition"
-              >
-                <p className="font-semibold text-gray-900">{cartao.nome || "Sem nome"}</p>
-                {cartao.empresa && <p className="text-sm text-indigo-600">{cartao.empresa}</p>}
-                {cartao.cargo && <p className="text-sm text-gray-500">{cartao.cargo}</p>}
-                {cartao.email && <p className="text-sm text-gray-400 mt-2">{cartao.email}</p>}
-                {cartao.telefone && <p className="text-sm text-gray-400">{cartao.telefone}</p>}
-              </Link>
-            ))}
-          </div>
+          <>
+            <p className="text-sm text-gray-400 mb-4">{cartoes.length} cartão{cartoes.length !== 1 ? "s" : ""}</p>
+            <div className="flex flex-col gap-3">
+              {cartoes.map((cartao) => (
+                <Link
+                  key={cartao.id}
+                  href={`/cartoes/${cartao.id}`}
+                  className="bg-white rounded-2xl border px-4 py-4 flex items-start gap-4 hover:shadow-sm active:bg-gray-50 transition"
+                >
+                  {/* Avatar */}
+                  <div className="shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
+                    {(cartao.nome ?? cartao.empresa ?? "?")[0].toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{cartao.nome || "Sem nome"}</p>
+                    {cartao.empresa && <p className="text-sm text-indigo-600 truncate">{cartao.empresa}</p>}
+                    {cartao.cargo && <p className="text-sm text-gray-400 truncate">{cartao.cargo}</p>}
+                    {(cartao.email || cartao.telefone) && (
+                      <p className="text-xs text-gray-400 mt-1 truncate">
+                        {cartao.email || cartao.telefone}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
         )}
-      </div>
-    </main>
+      </main>
+
+      {/* FAB mobile */}
+      {cartoes && cartoes.length > 0 && (
+        <div className="fixed bottom-6 right-4">
+          <Link
+            href="/cartoes/novo"
+            className="flex items-center gap-2 bg-indigo-600 text-white pl-4 pr-5 py-3 rounded-full font-semibold shadow-lg hover:bg-indigo-700 active:scale-95 transition"
+          >
+            <Plus size={20} />
+            <span>Adicionar</span>
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }
