@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus, CreditCard, LogOut } from "lucide-react";
 
+export const instant = false;
+
 export default async function CartoesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
