@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut } from "lucide-react";
+import { LogOut, UserCircle } from "lucide-react";
 import CartoesClient from "./CartoesClient";
 
 export const instant = false;
@@ -29,12 +29,16 @@ export default async function CartoesPage() {
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <Image src="/logo.svg" alt="Meus Cartões de Visita" width={140} height={35} />
-          <form action="/api/auth/signout" method="post">
-            <button className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 transition py-2 px-1">
-              <LogOut size={16} />
-              <span className="hidden sm:inline">Sair</span>
-            </button>
-          </form>
+          <div className="flex items-center gap-1">
+            <Link href="/perfil" className="p-2 text-gray-400 hover:text-indigo-600 transition">
+              <UserCircle size={22} />
+            </Link>
+            <form action="/api/auth/signout" method="post">
+              <button className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 transition py-2 px-1">
+                <LogOut size={16} />
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 
