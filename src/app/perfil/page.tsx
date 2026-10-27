@@ -37,6 +37,7 @@ export default async function PerfilPage() {
           userId={user.id}
           perfilAtual={perfilPublico}
           emailUsuario={user.email ?? ""}
+          avatarUrl={user.user_metadata?.avatar_url ?? null}
         />
         <DeletarContaSection />
       </div>

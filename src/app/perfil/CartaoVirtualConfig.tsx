@@ -14,7 +14,13 @@ interface PerfilPublico {
   whatsapp: string | null;
   site: string | null;
   instagram: string | null;
+  twitter: string | null;
+  tiktok: string | null;
+  linkedin: string | null;
+  youtube: string | null;
+  facebook: string | null;
   bio: string | null;
+  foto_url: string | null;
   ativo: boolean;
 }
 
@@ -22,9 +28,10 @@ interface Props {
   userId: string;
   perfilAtual: PerfilPublico | null;
   emailUsuario: string;
+  avatarUrl: string | null;
 }
 
-export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario }: Props) {
+export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario, avatarUrl }: Props) {
   const [form, setForm] = useState<PerfilPublico>({
     username: perfilAtual?.username ?? "",
     nome: perfilAtual?.nome ?? "",
@@ -35,7 +42,13 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario 
     whatsapp: perfilAtual?.whatsapp ?? "",
     site: perfilAtual?.site ?? "",
     instagram: perfilAtual?.instagram ?? "",
+    twitter: perfilAtual?.twitter ?? "",
+    tiktok: perfilAtual?.tiktok ?? "",
+    linkedin: perfilAtual?.linkedin ?? "",
+    youtube: perfilAtual?.youtube ?? "",
+    facebook: perfilAtual?.facebook ?? "",
     bio: perfilAtual?.bio ?? "",
+    foto_url: perfilAtual?.foto_url ?? avatarUrl ?? "",
     ativo: perfilAtual?.ativo ?? true,
   });
   const [saving, setSaving] = useState(false);
@@ -119,6 +132,22 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario 
           </div>
         </div>
 
+        {/* Foto */}
+        <div>
+          <label className="text-xs font-medium text-gray-500 block mb-1">URL da foto de perfil</label>
+          <input
+            type="url"
+            value={(form.foto_url as string) ?? ""}
+            onChange={set("foto_url")}
+            placeholder="https://..."
+            className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          {form.foto_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={form.foto_url} alt="preview" className="mt-2 w-12 h-12 rounded-full object-cover border" />
+          )}
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           {[
             { field: "nome" as const, label: "Nome*", placeholder: "João Silva", required: true },
@@ -128,6 +157,11 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario 
             { field: "telefone" as const, label: "Telefone", placeholder: "(11) 99999-0000" },
             { field: "whatsapp" as const, label: "WhatsApp", placeholder: "11999990000" },
             { field: "instagram" as const, label: "Instagram", placeholder: "@usuario" },
+            { field: "twitter" as const, label: "X (Twitter)", placeholder: "@usuario" },
+            { field: "tiktok" as const, label: "TikTok", placeholder: "@usuario" },
+            { field: "linkedin" as const, label: "LinkedIn", placeholder: "linkedin.com/in/usuario" },
+            { field: "youtube" as const, label: "YouTube", placeholder: "@canal ou URL" },
+            { field: "facebook" as const, label: "Facebook", placeholder: "facebook.com/usuario" },
             { field: "site" as const, label: "Site", placeholder: "https://acme.com" },
           ].map(({ field, label, placeholder, required }) => (
             <div key={field}>

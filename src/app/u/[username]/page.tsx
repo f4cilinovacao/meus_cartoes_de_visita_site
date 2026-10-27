@@ -38,10 +38,40 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
       color: "bg-blue-500 hover:bg-blue-600",
     },
     perfil.instagram && {
-      icon: <span className="text-base font-bold">IG</span>,
+      icon: <span className="text-sm font-bold leading-none">IG</span>,
       label: perfil.instagram,
       href: `https://instagram.com/${perfil.instagram.replace("@", "")}`,
       color: "bg-pink-500 hover:bg-pink-600",
+    },
+    perfil.twitter && {
+      icon: <span className="text-sm font-bold leading-none">𝕏</span>,
+      label: perfil.twitter,
+      href: `https://x.com/${perfil.twitter.replace("@", "")}`,
+      color: "bg-black hover:bg-gray-900",
+    },
+    perfil.tiktok && {
+      icon: <span className="text-sm font-bold leading-none">TT</span>,
+      label: perfil.tiktok,
+      href: `https://tiktok.com/@${perfil.tiktok.replace("@", "")}`,
+      color: "bg-gray-900 hover:bg-black",
+    },
+    perfil.linkedin && {
+      icon: <span className="text-sm font-bold leading-none">in</span>,
+      label: "LinkedIn",
+      href: perfil.linkedin.startsWith("http") ? perfil.linkedin : `https://linkedin.com/in/${perfil.linkedin}`,
+      color: "bg-blue-700 hover:bg-blue-800",
+    },
+    perfil.youtube && {
+      icon: <span className="text-sm font-bold leading-none">▶</span>,
+      label: "YouTube",
+      href: perfil.youtube.startsWith("http") ? perfil.youtube : `https://youtube.com/@${perfil.youtube.replace("@", "")}`,
+      color: "bg-red-600 hover:bg-red-700",
+    },
+    perfil.facebook && {
+      icon: <span className="text-sm font-bold leading-none">f</span>,
+      label: "Facebook",
+      href: perfil.facebook.startsWith("http") ? perfil.facebook : `https://facebook.com/${perfil.facebook}`,
+      color: "bg-blue-600 hover:bg-blue-700",
     },
     perfil.site && {
       icon: <Globe size={20} />,
