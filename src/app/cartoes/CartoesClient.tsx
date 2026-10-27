@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft, Search, X, Tag } from "lucide-react";
+import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft, Search, X, Tag, Globe, Lock } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const CompartilharModal = dynamic(() => import("@/components/CompartilharModal"), { ssr: false });
@@ -17,6 +17,7 @@ interface Cartao {
   telefone: string | null;
   foto_url: string | null;
   tags?: string[] | null;
+  visibilidade?: string | null;
 }
 
 interface CartaoRecebido extends Cartao {
@@ -28,6 +29,21 @@ interface Props {
   meus: Cartao[];
   recebidos: CartaoRecebido[];
   compartilheiMap: Record<string, string[]>;
+}
+
+function VisibilidadeBadge({ visibilidade }: { visibilidade?: string | null }) {
+  if (visibilidade === "publico") {
+    return (
+      <span className="flex items-center gap-0.5 bg-indigo-600/90 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">
+        <Globe size={9} /> Público
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-0.5 bg-gray-700/70 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">
+      <Lock size={9} /> Privado
+    </span>
+  );
 }
 
 function CartaoCard({ cartao, onShare, ownerLabel, badge }: {
@@ -93,6 +109,10 @@ function CartaoCard({ cartao, onShare, ownerLabel, badge }: {
               {ownerLabel}
             </div>
           )}
+
+          <div className="absolute bottom-2 left-2">
+            <VisibilidadeBadge visibilidade={cartao.visibilidade} />
+          </div>
 
           {badge && (
             <div className="absolute top-2 right-2">
