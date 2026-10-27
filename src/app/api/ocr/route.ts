@@ -28,7 +28,15 @@ export async function POST(req: NextRequest) {
   );
 
   const visionData = await visionRes.json();
+
+  if (!visionRes.ok || visionData.error) {
+    const msg = visionData.error?.message ?? `HTTP ${visionRes.status}`;
+    console.error("[OCR] Google Vision error:", msg);
+    return NextResponse.json({ error: `Google Vision: ${msg}` }, { status: 502 });
+  }
+
   const texto = visionData.responses?.[0]?.fullTextAnnotation?.text ?? "";
+  console.log("[OCR] texto extraído:", texto.slice(0, 200));
 
   const dados = extrairDados(texto);
   return NextResponse.json(dados);
@@ -98,6 +106,10 @@ function extrairDados(texto: string) {
     }
   }
 
+  // Endereço: linha com Rua, Av, Avenida, Al, número + cidade/estado
+  const ENDERECO = /\b(rua|av\.?|avenida|al\.|alameda|trav\.?|travessa|rod\.?|rodovia|estrada)\b/i;
+  const endereco = linhastexto.find((l) => ENDERECO.test(l)) ?? "";
+
   return {
     nome,
     empresa,
@@ -106,6 +118,7 @@ function extrairDados(texto: string) {
     telefone,
     site,
     instagram,
+    endereco,
     texto_completo: texto,
   };
 }

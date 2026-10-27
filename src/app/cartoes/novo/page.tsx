@@ -18,6 +18,7 @@ export default function NovoCartaoPage() {
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [ocrErro, setOcrErro] = useState("");
   const [form, setForm] = useState({
     nome: "", empresa: "", cargo: "", email: "", telefone: "", site: "", instagram: "", endereco: "", notas: "",
   });
@@ -27,12 +28,17 @@ export default function NovoCartaoPage() {
     setFotoPreview(previewUrl);
 
     setScanning(true);
+    setOcrErro("");
     try {
       const fd = new FormData();
       fd.append("imagem", file);
       const res = await fetch("/api/ocr", { method: "POST", body: fd });
-      if (res.ok) {
-        const dados = await res.json();
+      const dados = await res.json();
+      if (!res.ok) {
+        setOcrErro(`OCR: ${dados.error ?? res.status}`);
+      } else {
+        const preencheu = dados.nome || dados.empresa || dados.email || dados.telefone;
+        if (!preencheu) setOcrErro("OCR não encontrou dados no cartão");
         setForm((f) => ({
           nome: dados.nome || f.nome,
           empresa: dados.empresa || f.empresa,
@@ -41,12 +47,12 @@ export default function NovoCartaoPage() {
           telefone: dados.telefone || f.telefone,
           site: dados.site || f.site,
           instagram: dados.instagram || f.instagram,
-          endereco: f.endereco,
+          endereco: dados.endereco || f.endereco,
           notas: f.notas,
         }));
       }
-    } catch {
-      // OCR falhou silenciosamente
+    } catch (e) {
+      setOcrErro(`Erro ao chamar OCR: ${e}`);
     } finally {
       setScanning(false);
     }
@@ -155,6 +161,9 @@ export default function NovoCartaoPage() {
                 <ScanLine size={16} className="animate-pulse" />
                 Lendo dados do cartão...
               </div>
+            )}
+            {ocrErro && (
+              <p className="text-xs text-amber-600 mt-1">{ocrErro}</p>
             )}
             <input
               ref={fileRef}
