@@ -19,6 +19,7 @@ interface PerfilPublico {
   linkedin: string | null;
   youtube: string | null;
   facebook: string | null;
+  localizacao: string | null;
   bio: string | null;
   foto_url: string | null;
   short_code: string | null;
@@ -48,6 +49,7 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
     linkedin: perfilAtual?.linkedin ?? "",
     youtube: perfilAtual?.youtube ?? "",
     facebook: perfilAtual?.facebook ?? "",
+    localizacao: perfilAtual?.localizacao ?? "",
     bio: perfilAtual?.bio ?? "",
     foto_url: perfilAtual?.foto_url ?? avatarUrl ?? "",
     short_code: perfilAtual?.short_code ?? "",
@@ -197,6 +199,7 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
             { field: "youtube" as const, label: "YouTube", placeholder: "@canal ou URL" },
             { field: "facebook" as const, label: "Facebook", placeholder: "facebook.com/usuario" },
             { field: "site" as const, label: "Site", placeholder: "https://acme.com" },
+            { field: "localizacao" as const, label: "Localização", placeholder: "Cidade • Estado" },
           ].map(({ field, label, placeholder, required }) => (
             <div key={field}>
               <label className="text-xs font-medium text-gray-500 block mb-1">{label}</label>
