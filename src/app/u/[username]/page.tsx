@@ -101,6 +101,17 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex flex-col items-center py-12 px-4">
       <div className="w-full max-w-sm flex flex-col items-center gap-6">
 
+        {/* Logo topo — convite para conhecer a plataforma */}
+        <a href="https://meuscartoesdevisita.com.br" target="_blank" rel="noopener noreferrer" className="mb-2">
+          <Image
+            src="/logo.svg"
+            alt="Meus Cartões de Visita"
+            width={180}
+            height={44}
+            className="opacity-80 hover:opacity-100 transition"
+          />
+        </a>
+
         {/* Avatar */}
         <div className="relative">
           {perfil.foto_url ? (
@@ -154,18 +165,12 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
         </a>
 
         {/* Rodapé */}
-        <div className="flex flex-col items-center gap-1.5 mt-4">
-          <p className="text-xs text-gray-400">Criado com</p>
-          <a href="https://meuscartoesdevisita.com.br" target="_blank" rel="noopener noreferrer">
-            <Image
-              src="/logo.svg"
-              alt="Meus Cartões de Visita"
-              width={160}
-              height={40}
-              className="opacity-70 hover:opacity-100 transition"
-            />
+        <p className="text-xs text-gray-400 mt-2">
+          Crie o seu em{" "}
+          <a href="https://meuscartoesdevisita.com.br" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">
+            meuscartoesdevisita.com.br
           </a>
-        </div>
+        </p>
       </div>
     </div>
   );
