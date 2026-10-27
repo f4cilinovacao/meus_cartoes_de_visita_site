@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Camera, X, Loader2, ScanLine, FlipHorizontal } from "lucide-react";
+import { ArrowLeft, Camera, X, Loader2, ScanLine, FlipHorizontal, Globe, Lock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -31,6 +31,7 @@ export default function NovoCartaoPage() {
     nome: "", empresa: "", cargo: "", email: "", telefone: "", site: "", instagram: "", endereco: "", notas: "",
   });
   const [tags, setTags] = useState<string[]>([]);
+  const [visibilidade, setVisibilidade] = useState<"privado" | "publico">("privado");
 
   async function handleFotoFile(file: File, previewUrl: string, alvo: CropAlvo) {
     if (alvo === "frente") {
@@ -114,6 +115,7 @@ export default function NovoCartaoPage() {
       foto_verso,
       tags,
       origem: foto ? "ocr" : "manual",
+      visibilidade,
     });
 
     if (error) {
@@ -266,6 +268,29 @@ export default function NovoCartaoPage() {
                 rows={3}
                 className="w-full text-sm text-gray-900 bg-transparent focus:outline-none placeholder:text-gray-300 resize-none"
               />
+            </div>
+          </div>
+
+          {/* Visibilidade */}
+          <div className="bg-white rounded-2xl border p-4 flex flex-col gap-3">
+            <p className="text-sm font-medium text-gray-700">Visibilidade do cartão</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { val: "privado", icon: <Lock size={16} />, label: "Privado", desc: "Só você vê" },
+                { val: "publico", icon: <Globe size={16} />, label: "Público", desc: "Qualquer pessoa pode encontrar" },
+              ] as const).map(({ val, icon, label, desc }) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setVisibilidade(val)}
+                  className={`flex flex-col items-start gap-1 p-3 rounded-xl border-2 transition text-left ${visibilidade === val ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"}`}
+                >
+                  <span className={`flex items-center gap-1.5 font-semibold text-sm ${visibilidade === val ? "text-indigo-600" : "text-gray-700"}`}>
+                    {icon}{label}
+                  </span>
+                  <span className="text-xs text-gray-400">{desc}</span>
+                </button>
+              ))}
             </div>
           </div>
 

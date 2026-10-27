@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe, Share2, FlipHorizontal, Download } from "lucide-react";
+import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe, Share2, FlipHorizontal, Download, Lock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -28,6 +28,7 @@ type Cartao = {
   origem: string | null;
   created_at: string | null;
   user_id: string;
+  visibilidade: string | null;
 };
 
 export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
@@ -43,6 +44,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
   const [novaFotoVerso, setNovaFotoVerso] = useState<File | null>(null);
   const [fotoVersoPreview, setFotoVersoPreview] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>(cartao.tags ?? []);
+  const [visibilidade, setVisibilidade] = useState<"privado" | "publico">((cartao.visibilidade as "privado" | "publico") ?? "privado");
   const [form, setForm] = useState({
     nome: cartao.nome ?? "",
     empresa: cartao.empresa ?? "",
@@ -100,7 +102,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
       if (novaVersoUrl) foto_verso = novaVersoUrl;
     }
 
-    await supabase.from("cartoes").update({ ...form, foto_url, foto_verso, tags }).eq("id", cartao.id);
+    await supabase.from("cartoes").update({ ...form, foto_url, foto_verso, tags, visibilidade }).eq("id", cartao.id);
     setSaving(false);
     setEditing(false);
     router.refresh();
@@ -350,6 +352,36 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
             </div>
           )}
         </div>
+
+        {/* Visibilidade */}
+        {editing ? (
+          <div className="bg-white rounded-2xl border p-4 flex flex-col gap-3">
+            <p className="text-sm font-medium text-gray-700">Visibilidade do cartão</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { val: "privado", icon: <Lock size={16} />, label: "Privado", desc: "Só você vê" },
+                { val: "publico", icon: <Globe size={16} />, label: "Público", desc: "Qualquer pessoa pode encontrar" },
+              ] as const).map(({ val, icon, label, desc }) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setVisibilidade(val)}
+                  className={`flex flex-col items-start gap-1 p-3 rounded-xl border-2 transition text-left ${visibilidade === val ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"}`}
+                >
+                  <span className={`flex items-center gap-1.5 font-semibold text-sm ${visibilidade === val ? "text-indigo-600" : "text-gray-700"}`}>
+                    {icon}{label}
+                  </span>
+                  <span className="text-xs text-gray-400">{desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 px-1">
+            {visibilidade === "publico" ? <Globe size={12} className="text-indigo-400" /> : <Lock size={12} />}
+            <span>{visibilidade === "publico" ? "Cartão público" : "Cartão privado"}</span>
+          </div>
+        )}
 
         {/* Histórico */}
         {!editing && (cartao.origem || cartao.created_at) && (
