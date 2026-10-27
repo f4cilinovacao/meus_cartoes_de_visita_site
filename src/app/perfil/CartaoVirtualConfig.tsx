@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, ExternalLink, Check, Globe, Copy } from "lucide-react";
+import { Loader2, ExternalLink, Check, Globe, Copy, Eye, QrCode } from "lucide-react";
+import QRCode from "react-qr-code";
 
 interface PerfilPublico {
   username: string;
@@ -23,6 +24,7 @@ interface PerfilPublico {
   bio: string | null;
   foto_url: string | null;
   short_code: string | null;
+  views: number | null;
   ativo: boolean;
 }
 
@@ -53,12 +55,27 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
     bio: perfilAtual?.bio ?? "",
     foto_url: perfilAtual?.foto_url ?? avatarUrl ?? "",
     short_code: perfilAtual?.short_code ?? "",
+    views: perfilAtual?.views ?? 0,
     ativo: perfilAtual?.ativo ?? true,
   });
   const [saving, setSaving] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState(false);
   const [copiado, setCopiado] = useState<"normal" | "curto" | null>(null);
+  const [mostrarQR, setMostrarQR] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
+
+  function baixarQR() {
+    const svg = qrRef.current?.querySelector("svg");
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    canvas.width = 300; canvas.height = 300;
+    const ctx = canvas.getContext("2d")!;
+    const img = new window.Image();
+    img.onload = () => { ctx.drawImage(img, 0, 0, 300, 300); const a = document.createElement("a"); a.download = "qrcode-cartao.png"; a.href = canvas.toDataURL(); a.click(); };
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+  }
 
   function copiar(texto: string, tipo: "normal" | "curto") {
     navigator.clipboard.writeText(texto);
@@ -149,6 +166,40 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
           <p className="text-xs text-gray-400 italic">O link curto será gerado automaticamente ao salvar.</p>
         )}
       </div>
+
+      {/* Stats + QR */}
+      {perfilAtual && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-sm text-gray-500">
+            <Eye size={15} className="text-indigo-400" />
+            <span><strong className="text-gray-800">{perfilAtual.views ?? 0}</strong> visualizações</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMostrarQR((v) => !v)}
+            className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition"
+          >
+            <QrCode size={15} />
+            {mostrarQR ? "Ocultar QR" : "Ver QR Code"}
+          </button>
+        </div>
+      )}
+
+      {mostrarQR && urlCurta && (
+        <div className="flex flex-col items-center gap-3 bg-gray-50 rounded-2xl p-4">
+          <div ref={qrRef} className="bg-white p-3 rounded-xl shadow-sm">
+            <QRCode value={urlCurta} size={160} />
+          </div>
+          <p className="text-xs text-gray-400 text-center">{BASE}/s/{form.short_code}</p>
+          <button
+            type="button"
+            onClick={baixarQR}
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium underline transition"
+          >
+            Baixar QR Code (PNG)
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSave} className="flex flex-col gap-3">
         {/* Username */}

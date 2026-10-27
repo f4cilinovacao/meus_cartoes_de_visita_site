@@ -18,6 +18,9 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
 
   if (!perfil) notFound();
 
+  // Incrementa views (fire-and-forget, não bloqueia render)
+  supabase.rpc("increment_profile_views", { profile_username: username.toLowerCase() });
+
   // vCard
   const escape = (s: string | null) => (s ?? "").replace(/[,;\\]/g, (c) => `\\${c}`);
   const nomes = (perfil.nome ?? "").trim().split(" ");
