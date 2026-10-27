@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft, Search, X } from "lucide-react";
+import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft, Search, X, Tag } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const CompartilharModal = dynamic(() => import("@/components/CompartilharModal"), { ssr: false });
@@ -16,6 +16,7 @@ interface Cartao {
   email: string | null;
   telefone: string | null;
   foto_url: string | null;
+  tags?: string[] | null;
 }
 
 interface CartaoRecebido extends Cartao {
@@ -114,14 +115,17 @@ function CartaoCard({ cartao, onShare, ownerLabel, badge }: {
   );
 }
 
-function bate(cartao: Cartao, q: string) {
+function bate(cartao: Cartao, q: string, tag: string) {
+  if (tag && !cartao.tags?.includes(tag)) return false;
+  if (!q) return true;
   const t = q.toLowerCase();
-  return (
+  return !!(
     cartao.nome?.toLowerCase().includes(t) ||
     cartao.empresa?.toLowerCase().includes(t) ||
     cartao.cargo?.toLowerCase().includes(t) ||
     cartao.email?.toLowerCase().includes(t) ||
-    cartao.telefone?.toLowerCase().includes(t)
+    cartao.telefone?.toLowerCase().includes(t) ||
+    cartao.tags?.some((tg) => tg.toLowerCase().includes(t))
   );
 }
 
@@ -129,17 +133,25 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
   const [aba, setAba] = useState<"meus" | "compartilhados">("meus");
   const [compartilhandoId, setCompartilhandoId] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
+  const [tagAtiva, setTagAtiva] = useState("");
 
   const cartaoCompartilhando = compartilhandoId
     ? meus.find((c) => c.id === compartilhandoId)
     : null;
 
+  // Todas as tags únicas dos meus cartões
+  const todasTags = useMemo(() => {
+    const set = new Set<string>();
+    meus.forEach((c) => c.tags?.forEach((t) => set.add(t)));
+    return Array.from(set).sort();
+  }, [meus]);
+
   const q = busca.trim();
-  const meusFiltrados = useMemo(() => q ? meus.filter((c) => bate(c, q)) : meus, [meus, q]);
-  const recebidosFiltrados = useMemo(() => q ? recebidos.filter((c) => bate(c, q)) : recebidos, [recebidos, q]);
+  const meusFiltrados = useMemo(() => meus.filter((c) => bate(c, q, tagAtiva)), [meus, q, tagAtiva]);
+  const recebidosFiltrados = useMemo(() => recebidos.filter((c) => bate(c, q, tagAtiva)), [recebidos, q, tagAtiva]);
   const meusCompartilhados = useMemo(
-    () => (q ? meus.filter((c) => compartilheiMap[c.id] && bate(c, q)) : meus.filter((c) => compartilheiMap[c.id])),
-    [meus, compartilheiMap, q]
+    () => meus.filter((c) => compartilheiMap[c.id] && bate(c, q, tagAtiva)),
+    [meus, compartilheiMap, q, tagAtiva]
   );
 
   const totalCompartilhados = meus.filter((c) => compartilheiMap[c.id]).length + recebidos.length;
@@ -170,6 +182,26 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
           </button>
         )}
       </div>
+
+      {/* Tags filtro */}
+      {todasTags.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-3 scrollbar-hide">
+          {todasTags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setTagAtiva(tagAtiva === tag ? "" : tag)}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition shrink-0 ${
+                tagAtiva === tag
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              <Tag size={10} />
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Abas */}
       <div className="flex bg-gray-100 rounded-2xl p-1 mb-5">

@@ -9,6 +9,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 
 const CompartilharModal = dynamic(() => import("@/components/CompartilharModal"), { ssr: false });
+const TagsInput = dynamic(() => import("@/components/TagsInput"), { ssr: false });
 
 type Cartao = {
   id: string;
@@ -23,6 +24,7 @@ type Cartao = {
   notas: string | null;
   foto_url: string | null;
   foto_verso: string | null;
+  tags: string[] | null;
   user_id: string;
 };
 
@@ -38,6 +40,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [novaFotoVerso, setNovaFotoVerso] = useState<File | null>(null);
   const [fotoVersoPreview, setFotoVersoPreview] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>(cartao.tags ?? []);
   const [form, setForm] = useState({
     nome: cartao.nome ?? "",
     empresa: cartao.empresa ?? "",
@@ -95,7 +98,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
       if (novaVersoUrl) foto_verso = novaVersoUrl;
     }
 
-    await supabase.from("cartoes").update({ ...form, foto_url, foto_verso }).eq("id", cartao.id);
+    await supabase.from("cartoes").update({ ...form, foto_url, foto_verso, tags }).eq("id", cartao.id);
     setSaving(false);
     setEditing(false);
     router.refresh();
@@ -313,6 +316,21 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
               </div>
             );
           })}
+
+          {(editing || tags.length > 0) && (
+            <div className="px-4 py-3">
+              <label className="text-sm text-gray-400 block mb-1">Tags</label>
+              {editing ? (
+                <TagsInput tags={tags} onChange={setTags} />
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map((tag) => (
+                    <span key={tag} className="bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded-full">{tag}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {(editing || form.notas) && (
             <div className="px-4 py-3">

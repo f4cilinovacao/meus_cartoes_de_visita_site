@@ -9,6 +9,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 
 const FotoCrop = dynamic(() => import("@/components/FotoCrop"), { ssr: false });
+const TagsInput = dynamic(() => import("@/components/TagsInput"), { ssr: false });
 
 type CropAlvo = "frente" | "verso";
 
@@ -29,6 +30,7 @@ export default function NovoCartaoPage() {
   const [form, setForm] = useState({
     nome: "", empresa: "", cargo: "", email: "", telefone: "", site: "", instagram: "", endereco: "", notas: "",
   });
+  const [tags, setTags] = useState<string[]>([]);
 
   async function handleFotoFile(file: File, previewUrl: string, alvo: CropAlvo) {
     if (alvo === "frente") {
@@ -110,6 +112,7 @@ export default function NovoCartaoPage() {
       ...form,
       foto_url,
       foto_verso,
+      tags,
     });
 
     if (error) {
@@ -249,6 +252,10 @@ export default function NovoCartaoPage() {
                 />
               </div>
             ))}
+            <div className="px-4 py-3">
+              <label className="text-sm text-gray-500 block mb-1">Tags</label>
+              <TagsInput tags={tags} onChange={setTags} />
+            </div>
             <div className="px-4 py-3">
               <label className="text-sm text-gray-500 block mb-1">Notas</label>
               <textarea
