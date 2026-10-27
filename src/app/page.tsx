@@ -8,9 +8,8 @@ export default function Home() {
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image src="/favicon.svg" alt="Meus Cartões de Visita" width={28} height={28} />
-            <span className="font-bold text-gray-900 text-sm sm:text-base">Meus Cartões de Visita</span>
+          <div className="flex items-center">
+            <Image src="/logo.svg" alt="Meus Cartões de Visita" width={180} height={45} />
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
@@ -174,9 +173,8 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-8 px-4 text-center bg-white border-t border-gray-100">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Image src="/favicon.svg" alt="" width={22} height={22} aria-hidden="true" />
-          <span className="font-semibold text-gray-700 text-sm">Meus Cartões de Visita</span>
+        <div className="flex items-center justify-center mb-2">
+          <Image src="/logo.svg" alt="Meus Cartões de Visita" width={160} height={40} />
         </div>
         <p className="text-xs text-gray-400">© 2025 · Todos os direitos reservados</p>
       </footer>

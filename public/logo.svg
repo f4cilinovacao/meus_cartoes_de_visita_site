@@ -1,20 +1,26 @@
-<svg width="320" height="80" viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Card stack icon -->
-  <!-- Card 3 back -->
-  <rect x="4" y="16" width="52" height="34" rx="5" fill="#818cf8" transform="rotate(-10 30 33)"/>
-  <!-- Card 2 mid -->
-  <rect x="4" y="16" width="52" height="34" rx="5" fill="#a5b4fc" transform="rotate(-4 30 33)"/>
-  <!-- Card 1 front -->
-  <rect x="4" y="16" width="52" height="34" rx="5" fill="#4f46e5"/>
-  <!-- Card front lines -->
-  <rect x="11" y="23" width="20" height="4" rx="2" fill="white" opacity="0.9"/>
-  <rect x="11" y="30" width="32" height="3" rx="1.5" fill="white" opacity="0.5"/>
-  <rect x="11" y="36" width="26" height="3" rx="1.5" fill="white" opacity="0.35"/>
-  <!-- Avatar dot -->
-  <circle cx="48" cy="26" r="6" fill="white" opacity="0.2"/>
-  <circle cx="48" cy="24" r="3" fill="white" opacity="0.5"/>
+<svg width="400" height="120" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Card stack -->
+  <!-- Card back -->
+  <rect x="8" y="22" width="120" height="80" rx="10" fill="#c7d2fe" transform="rotate(-6 68 62)"/>
+  <!-- Card mid -->
+  <rect x="8" y="22" width="120" height="80" rx="10" fill="#dde2fb" transform="rotate(-2 68 62)"/>
+  <!-- Card front -->
+  <rect x="8" y="22" width="120" height="80" rx="10" fill="#eef0fd"/>
+
+  <!-- Card content lines -->
+  <rect x="20" y="38" width="44" height="8" rx="4" fill="#4f46e5"/>
+  <rect x="20" y="52" width="72" height="6" rx="3" fill="#c7d2fe"/>
+  <rect x="20" y="63" width="60" height="6" rx="3" fill="#dde2fb"/>
+  <rect x="20" y="74" width="50" height="5" rx="2.5" fill="#dde2fb"/>
+  <rect x="20" y="84" width="64" height="5" rx="2.5" fill="#e8eafc"/>
+
+  <!-- Avatar circle -->
+  <circle cx="102" cy="55" r="22" fill="#dde2fb"/>
+  <circle cx="102" cy="49" r="9" fill="#a5b4fc"/>
+  <ellipse cx="102" cy="70" rx="14" ry="9" fill="#a5b4fc" opacity="0.7"/>
 
   <!-- Text -->
-  <text x="68" y="32" font-family="system-ui, -apple-system, sans-serif" font-weight="700" font-size="18" fill="#1e1b4b" letter-spacing="-0.5">Meus Cartões</text>
-  <text x="68" y="52" font-family="system-ui, -apple-system, sans-serif" font-weight="700" font-size="18" fill="#4f46e5" letter-spacing="-0.5">de Visita</text>
+  <text x="148" y="58" font-family="system-ui,-apple-system,sans-serif" font-weight="800" font-size="28" fill="#1e1b4b" letter-spacing="-0.5">Meus Cartões</text>
+  <text x="148" y="88" font-family="system-ui,-apple-system,sans-serif" font-weight="800" font-size="28" fill="#6366f1" letter-spacing="-0.5">de Visita</text>
+  <text x="150" y="108" font-family="system-ui,-apple-system,sans-serif" font-weight="400" font-size="11" fill="#818cf8" letter-spacing="2">DIGITALIZE · ORGANIZE · COMPARTILHE</text>
 </svg>

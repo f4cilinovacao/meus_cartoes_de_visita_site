@@ -22,9 +22,8 @@ export default async function CartoesPage() {
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image src="/favicon.svg" alt="" width={26} height={26} aria-hidden="true" />
-            <span className="font-bold text-gray-900">Meus Cartões</span>
+          <div className="flex items-center">
+            <Image src="/logo.svg" alt="Meus Cartões de Visita" width={140} height={35} />
           </div>
           <form action="/api/auth/signout" method="post">
             <button className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 transition py-2 px-1">

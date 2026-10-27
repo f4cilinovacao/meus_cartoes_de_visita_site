@@ -63,9 +63,8 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <Image src="/favicon.svg" alt="Meus Cartões de Visita" width={32} height={32} />
-          <span className="font-bold text-gray-900">Meus Cartões de Visita</span>
+        <div className="flex items-center justify-center mb-8">
+          <Image src="/logo.svg" alt="Meus Cartões de Visita" width={200} height={50} />
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
