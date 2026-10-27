@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Building2, MapPin, ArrowRight } from "lucide-react";
+import { Search, Building2, ArrowRight, ChevronRight } from "lucide-react";
 
 export const instant = false;
 
@@ -77,9 +77,10 @@ export default async function ExplorarPage({
         {cartoes && cartoes.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {cartoes.map((c: Cartao) => (
-              <div
+              <Link
                 key={c.id}
-                className="bg-white rounded-2xl border p-4 flex flex-col gap-2 shadow-sm"
+                href={`/explorar/${c.id}`}
+                className="bg-white rounded-2xl border p-4 flex flex-col gap-2 shadow-sm hover:shadow-md hover:border-indigo-200 active:scale-[0.98] transition"
               >
                 {/* Avatar */}
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center shrink-0">
@@ -122,12 +123,16 @@ export default async function ExplorarPage({
                     ))}
                   </div>
                 )}
-              </div>
+
+                <div className="flex items-center justify-end mt-auto pt-1">
+                  <ChevronRight size={14} className="text-indigo-400" />
+                </div>
+              </Link>
             ))}
           </div>
         ) : (
           <div className="text-center py-16 text-gray-400">
-            <MapPin size={40} className="mx-auto mb-3 opacity-30" />
+            <Search size={40} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">Nenhum cartão público encontrado</p>
             {q && <p className="text-sm mt-1">Tente outra busca</p>}
           </div>
