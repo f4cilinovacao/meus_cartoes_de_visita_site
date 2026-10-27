@@ -19,7 +19,7 @@ export default function NovoCartaoPage() {
   const [saving, setSaving] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [form, setForm] = useState({
-    nome: "", empresa: "", cargo: "", email: "", telefone: "", site: "", endereco: "", notas: "",
+    nome: "", empresa: "", cargo: "", email: "", telefone: "", site: "", instagram: "", endereco: "", notas: "",
   });
 
   async function handleFotoFile(file: File, previewUrl: string) {
@@ -40,6 +40,7 @@ export default function NovoCartaoPage() {
           email: dados.email || f.email,
           telefone: dados.telefone || f.telefone,
           site: dados.site || f.site,
+          instagram: dados.instagram || f.instagram,
           endereco: f.endereco,
           notas: f.notas,
         }));
@@ -174,6 +175,7 @@ export default function NovoCartaoPage() {
               { field: "email", label: "E-mail", type: "email", placeholder: "joao@acme.com" },
               { field: "telefone", label: "Telefone", type: "tel", placeholder: "(11) 99999-0000" },
               { field: "site", label: "Site", type: "url", placeholder: "https://acme.com" },
+              { field: "instagram", label: "Instagram", type: "text", placeholder: "@usuario" },
               { field: "endereco", label: "Endereço", type: "text", placeholder: "Rua..." },
             ].map(({ field, label, type, placeholder }) => (
               <div key={field} className="flex items-center px-4 py-3 gap-3">

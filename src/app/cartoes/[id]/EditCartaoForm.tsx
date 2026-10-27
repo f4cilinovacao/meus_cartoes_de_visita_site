@@ -18,6 +18,7 @@ type Cartao = {
   email: string | null;
   telefone: string | null;
   site: string | null;
+  instagram: string | null;
   endereco: string | null;
   notas: string | null;
   foto_url: string | null;
@@ -40,6 +41,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
     email: cartao.email ?? "",
     telefone: cartao.telefone ?? "",
     site: cartao.site ?? "",
+    instagram: cartao.instagram ?? "",
     endereco: cartao.endereco ?? "",
     notas: cartao.notas ?? "",
   });
@@ -202,6 +204,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
             { field: "email", label: "E-mail", type: "email" },
             { field: "telefone", label: "Telefone", type: "tel" },
             { field: "site", label: "Site", type: "url" },
+            { field: "instagram", label: "Instagram", type: "text" },
             { field: "endereco", label: "Endereço", type: "text" },
           ].map(({ field, label, type }) => {
             const val = form[field as keyof typeof form];
