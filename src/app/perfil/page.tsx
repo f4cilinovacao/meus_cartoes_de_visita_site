@@ -9,10 +9,12 @@ export default async function PerfilPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ count: totalCartoes }, { count: compartilhados }] = await Promise.all([
-    supabase.from("cartoes").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-    supabase.from("cartoes_compartilhados").select("*", { count: "exact", head: true }).eq("owner_id", user.id),
+  const [{ data: meusCartoes }, { data: meusCompartilhados }] = await Promise.all([
+    supabase.from("cartoes").select("id").eq("user_id", user.id),
+    supabase.from("cartoes_compartilhados").select("id").eq("owner_id", user.id),
   ]);
+  const totalCartoes = meusCartoes?.length ?? 0;
+  const compartilhados = meusCompartilhados?.length ?? 0;
 
   return (
     <PerfilClient
