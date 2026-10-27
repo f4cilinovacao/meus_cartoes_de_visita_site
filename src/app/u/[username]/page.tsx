@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { Mail, Phone, Globe, Instagram, MessageCircle, MapPin } from "lucide-react";
+import { Mail, Phone, Globe, MessageCircle } from "lucide-react";
 
 export const instant = false;
 
@@ -38,7 +38,7 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
       color: "bg-blue-500 hover:bg-blue-600",
     },
     perfil.instagram && {
-      icon: <Instagram size={20} />,
+      icon: <span className="text-base font-bold">IG</span>,
       label: perfil.instagram,
       href: `https://instagram.com/${perfil.instagram.replace("@", "")}`,
       color: "bg-pink-500 hover:bg-pink-600",
