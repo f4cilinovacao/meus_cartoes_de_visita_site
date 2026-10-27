@@ -154,12 +154,18 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
         </a>
 
         {/* Rodapé */}
-        <p className="text-xs text-gray-400 mt-4">
-          Criado com{" "}
-          <a href="https://meuscartoesdevisita.com.br" className="text-indigo-400 hover:underline">
-            Meus Cartões de Visita
+        <div className="flex flex-col items-center gap-1.5 mt-4">
+          <p className="text-xs text-gray-400">Criado com</p>
+          <a href="https://meuscartoesdevisita.com.br" target="_blank" rel="noopener noreferrer">
+            <Image
+              src="/logo.svg"
+              alt="Meus Cartões de Visita"
+              width={160}
+              height={40}
+              className="opacity-70 hover:opacity-100 transition"
+            />
           </a>
-        </p>
+        </div>
       </div>
     </div>
   );
