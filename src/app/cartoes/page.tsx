@@ -16,12 +16,12 @@ export default async function CartoesPage() {
   const [{ data: meus }, { data: recebidos }] = await Promise.all([
     supabase
       .from("cartoes")
-      .select("id, nome, empresa, cargo, email, telefone")
+      .select("id, nome, empresa, cargo, email, telefone, foto_url")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("cartoes_recebidos")
-      .select("id, nome, empresa, cargo, email, telefone, owner_email, owner_nome"),
+      .select("id, nome, empresa, cargo, email, telefone, foto_url, owner_email, owner_nome"),
   ]);
 
   return (
