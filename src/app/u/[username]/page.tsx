@@ -47,7 +47,9 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
   ].filter(Boolean) as Social[];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-100 flex flex-col items-center justify-start py-10 px-4">
+    <>
+    <style>{`body { background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 50%, #dbeafe 100%) !important; min-height: 100vh; }`}</style>
+    <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4" style={{ background: "linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 50%, #dbeafe 100%)" }}>
       <div className="w-full max-w-sm flex flex-col gap-5">
 
         {/* Card principal */}
@@ -181,5 +183,6 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
 
       </div>
     </div>
+    </>
   );
 }
