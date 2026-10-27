@@ -198,9 +198,11 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap, grupos
     if (!novoGrupoNome.trim()) return;
     setSalvandoGrupo(true);
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setSalvandoGrupo(false); return; }
     const { data } = await supabase
       .from("grupos")
-      .insert({ nome: novoGrupoNome.trim(), cor: novoGrupoCor })
+      .insert({ nome: novoGrupoNome.trim(), cor: novoGrupoCor, user_id: user.id })
       .select("id, nome, cor")
       .single();
     if (data) setGrupos((g) => [...g, data]);
