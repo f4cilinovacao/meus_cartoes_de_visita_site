@@ -81,7 +81,7 @@ export default function PerfilClient({ userId, email, nomeInicial, avatarInicial
   const isGoogle = provider === "google";
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="flex flex-col bg-gray-50">
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link href="/cartoes" className="p-1 -ml-1 text-gray-500 hover:text-gray-800">
@@ -91,7 +91,7 @@ export default function PerfilClient({ userId, email, nomeInicial, avatarInicial
         </div>
       </header>
 
-      <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-6 flex flex-col gap-5">
+      <div className="max-w-2xl mx-auto w-full px-4 py-6 flex flex-col gap-5">
 
         {/* Avatar + Nome */}
         <div className="bg-white rounded-2xl border p-5 flex flex-col items-center gap-4">
