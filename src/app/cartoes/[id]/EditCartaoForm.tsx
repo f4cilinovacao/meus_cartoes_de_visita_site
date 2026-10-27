@@ -392,28 +392,34 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
           </div>
 
           {/* Grupo */}
-          {(editing && grupos.length > 0) && (
+          {editing && (
             <div className="px-4 py-3">
               <label className="text-sm text-gray-400 block mb-2 flex items-center gap-1"><FolderOpen size={13} /> Grupo</label>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setGrupoId(null)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${!grupoId ? "border-gray-700 bg-gray-100 text-gray-800" : "border-gray-200 text-gray-500"}`}
-                >
-                  Nenhum
-                </button>
-                {grupos.map((g) => (
+              {grupos.length === 0 ? (
+                <a href="/cartoes" className="text-xs text-indigo-500 hover:underline">
+                  Nenhum grupo criado — crie grupos na lista de cartões
+                </a>
+              ) : (
+                <div className="flex flex-wrap gap-2">
                   <button
-                    key={g.id}
                     type="button"
-                    onClick={() => setGrupoId(g.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${grupoId === g.id ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600"}`}
+                    onClick={() => setGrupoId(null)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${!grupoId ? "border-gray-700 bg-gray-100 text-gray-800" : "border-gray-200 text-gray-500"}`}
                   >
-                    {g.nome}
+                    Nenhum
                   </button>
-                ))}
-              </div>
+                  {grupos.map((g) => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setGrupoId(g.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${grupoId === g.id ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600"}`}
+                    >
+                      {g.nome}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           {!editing && grupoId && grupos.find((g) => g.id === grupoId) && (
