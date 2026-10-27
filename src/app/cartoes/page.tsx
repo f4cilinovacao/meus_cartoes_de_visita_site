@@ -30,7 +30,7 @@ export default async function CartoesPage() {
     <div className="min-h-screen flex flex-col">
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Image src="/logo.svg" alt="Meus Cartões de Visita" width={140} height={35} />
+          <Image src="/logo.svg" alt="Meus Cartões de Visita" width={200} height={50} className="w-36 sm:w-52" />
           <div className="flex items-center gap-2">
             <Link href="/perfil" className="hover:opacity-80 transition">
               {avatar ? (
