@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Phone, Mail, MapPin, ChevronRight, UserPlus } from "lucide-react";
+import DarkModeToggle from "./DarkModeToggle";
 
 export const instant = false;
 
@@ -51,18 +52,34 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
 
   return (
     <>
-    <style>{`body { background: url('/bg-cartao-virtual.webp') center center / cover no-repeat fixed !important; min-height: 100vh; }`}</style>
+    <style>{`
+      body { background: url('/bg-cartao-virtual.webp') center center / cover no-repeat fixed !important; min-height: 100vh; }
+      [data-dark="1"] body { background: #0f172a !important; }
+      [data-dark="1"] .card-bg { background: #1e293b !important; }
+      [data-dark="1"] .card-text { color: #f1f5f9 !important; }
+      [data-dark="1"] .card-sub { color: #94a3b8 !important; }
+      [data-dark="1"] .card-row { background: #334155 !important; border-color: #475569 !important; }
+      [data-dark="1"] .card-row-text { color: #e2e8f0 !important; }
+    `}</style>
+    <DarkModeToggle />
     <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4">
       <div className="w-full max-w-sm flex flex-col gap-5">
 
         {/* Card principal */}
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+        <div className="card-bg bg-white rounded-3xl shadow-xl overflow-hidden">
+
+          {/* Foto de capa */}
+          {perfil.capa_url && (
+            <div className="w-full h-28 overflow-hidden rounded-t-3xl">
+              <Image src={perfil.capa_url} alt="Capa" fill={false} width={400} height={112} className="w-full h-full object-cover" />
+            </div>
+          )}
 
           {/* Topo do card */}
-          <div className="flex flex-col items-center pt-8 pb-5 px-6 gap-3">
+          <div className={`flex flex-col items-center ${perfil.capa_url ? "-mt-12 pt-0" : "pt-8"} pb-5 px-6 gap-3`}>
 
             {/* Foto */}
-            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg shrink-0">
+            <div className={`w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg shrink-0 ${perfil.capa_url ? "ring-2 ring-white" : ""}`}>
               {perfil.foto_url ? (
                 <Image src={perfil.foto_url} alt={perfil.nome ?? ""} width={96} height={96} className="object-cover w-full h-full" />
               ) : (
@@ -74,10 +91,10 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
 
             {/* Identidade */}
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 leading-tight">{perfil.nome}</h1>
+              <h1 className="card-text text-2xl font-bold text-gray-900 leading-tight">{perfil.nome}</h1>
               {perfil.cargo && <p className="text-indigo-600 font-semibold mt-0.5">{perfil.cargo}</p>}
-              {perfil.empresa && <p className="text-gray-500 text-sm mt-0.5">{perfil.empresa}</p>}
-              {perfil.bio && <p className="text-gray-500 text-sm mt-2 leading-relaxed">{perfil.bio}</p>}
+              {perfil.empresa && <p className="card-sub text-gray-500 text-sm mt-0.5">{perfil.empresa}</p>}
+              {perfil.bio && <p className="card-sub text-gray-500 text-sm mt-2 leading-relaxed">{perfil.bio}</p>}
             </div>
           </div>
 
@@ -116,12 +133,12 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
             {perfil.telefone && (
               <a
                 href={`tel:${perfil.telefone}`}
-                className="flex items-center gap-4 border border-gray-100 bg-gray-50 hover:bg-indigo-50 px-4 py-3.5 rounded-2xl transition active:scale-[0.98]"
+                className="card-row flex items-center gap-4 border border-gray-100 bg-gray-50 hover:bg-indigo-50 px-4 py-3.5 rounded-2xl transition active:scale-[0.98]"
               >
                 <Phone size={20} className="text-indigo-500 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ligar</p>
-                  <p className="text-sm font-medium text-gray-800 truncate">{perfil.telefone}</p>
+                  <p className="card-sub text-xs font-semibold text-gray-500 uppercase tracking-wide">Ligar</p>
+                  <p className="card-row-text text-sm font-medium text-gray-800 truncate">{perfil.telefone}</p>
                 </div>
                 <ChevronRight size={16} className="text-gray-400 shrink-0" />
               </a>
@@ -131,12 +148,12 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
             {perfil.email && (
               <a
                 href={`mailto:${perfil.email}`}
-                className="flex items-center gap-4 border border-gray-100 bg-gray-50 hover:bg-indigo-50 px-4 py-3.5 rounded-2xl transition active:scale-[0.98]"
+                className="card-row flex items-center gap-4 border border-gray-100 bg-gray-50 hover:bg-indigo-50 px-4 py-3.5 rounded-2xl transition active:scale-[0.98]"
               >
                 <Mail size={20} className="text-indigo-500 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">E-mail</p>
-                  <p className="text-sm font-medium text-gray-800 truncate">{perfil.email}</p>
+                  <p className="card-sub text-xs font-semibold text-gray-500 uppercase tracking-wide">E-mail</p>
+                  <p className="card-row-text text-sm font-medium text-gray-800 truncate">{perfil.email}</p>
                 </div>
                 <ChevronRight size={16} className="text-gray-400 shrink-0" />
               </a>

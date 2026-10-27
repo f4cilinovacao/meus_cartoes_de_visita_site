@@ -25,6 +25,8 @@ type Cartao = {
   foto_url: string | null;
   foto_verso: string | null;
   tags: string[] | null;
+  origem: string | null;
+  created_at: string | null;
   user_id: string;
 };
 
@@ -348,6 +350,18 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
             </div>
           )}
         </div>
+
+        {/* Histórico */}
+        {!editing && (cartao.origem || cartao.created_at) && (
+          <div className="flex items-center gap-2 text-xs text-gray-400 px-1">
+            <span>
+              {cartao.origem === "ocr" ? "📷 Digitalizado por foto" : cartao.origem === "compartilhado" ? "🔗 Recebido por compartilhamento" : "✏️ Adicionado manualmente"}
+            </span>
+            {cartao.created_at && (
+              <span>· {new Date(cartao.created_at).toLocaleDateString("pt-BR")}</span>
+            )}
+          </div>
+        )}
 
         {editing && (
           <button

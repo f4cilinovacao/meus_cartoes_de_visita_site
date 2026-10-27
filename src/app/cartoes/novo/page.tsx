@@ -113,6 +113,7 @@ export default function NovoCartaoPage() {
       foto_url,
       foto_verso,
       tags,
+      origem: foto ? "ocr" : "manual",
     });
 
     if (error) {

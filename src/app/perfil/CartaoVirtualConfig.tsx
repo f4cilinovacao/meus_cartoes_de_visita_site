@@ -23,6 +23,7 @@ interface PerfilPublico {
   localizacao: string | null;
   bio: string | null;
   foto_url: string | null;
+  capa_url: string | null;
   short_code: string | null;
   views: number | null;
   ativo: boolean;
@@ -54,6 +55,7 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
     localizacao: perfilAtual?.localizacao ?? "",
     bio: perfilAtual?.bio ?? "",
     foto_url: perfilAtual?.foto_url ?? avatarUrl ?? "",
+    capa_url: perfilAtual?.capa_url ?? "",
     short_code: perfilAtual?.short_code ?? "",
     views: perfilAtual?.views ?? 0,
     ativo: perfilAtual?.ativo ?? true,
@@ -219,7 +221,7 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
           </div>
         </div>
 
-        {/* Foto */}
+        {/* Foto de perfil */}
         <div>
           <label className="text-xs font-medium text-gray-500 block mb-1">URL da foto de perfil</label>
           <input
@@ -232,6 +234,22 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
           {form.foto_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={form.foto_url} alt="preview" className="mt-2 w-12 h-12 rounded-full object-cover border" />
+          )}
+        </div>
+
+        {/* Foto de capa */}
+        <div>
+          <label className="text-xs font-medium text-gray-500 block mb-1">URL da foto de capa <span className="text-gray-400 font-normal">(faixa atrás do perfil)</span></label>
+          <input
+            type="url"
+            value={(form.capa_url as string) ?? ""}
+            onChange={set("capa_url")}
+            placeholder="https://..."
+            className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          {form.capa_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={form.capa_url} alt="preview capa" className="mt-2 w-full h-16 object-cover rounded-xl border" />
           )}
         </div>
 

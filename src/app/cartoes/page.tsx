@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { LogOut, UserCircle } from "lucide-react";
 import CartoesClient from "./CartoesClient";
+import OnboardingWizard from "@/components/OnboardingWizard";
 
 export const instant = false;
 
@@ -83,6 +84,9 @@ export default async function CartoesPage() {
           </div>
         </div>
       </header>
+
+      {/* Onboarding: aparece só para quem ainda não tem cartões */}
+      {(meus ?? []).length === 0 && <OnboardingWizard />}
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
         <CartoesClient
