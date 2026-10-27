@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Share2, Users } from "lucide-react";
+import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const CompartilharModal = dynamic(() => import("@/components/CompartilharModal"), { ssr: false });
@@ -26,12 +26,14 @@ interface CartaoRecebido extends Cartao {
 interface Props {
   meus: Cartao[];
   recebidos: CartaoRecebido[];
+  compartilheiMap: Record<string, string[]>;
 }
 
-function CartaoCard({ cartao, onShare, ownerLabel }: {
+function CartaoCard({ cartao, onShare, ownerLabel, badge }: {
   cartao: Cartao;
   onShare?: () => void;
   ownerLabel?: string;
+  badge?: React.ReactNode;
 }) {
   const inicial = (cartao.nome ?? cartao.empresa ?? "?")[0].toUpperCase();
 
@@ -48,7 +50,6 @@ function CartaoCard({ cartao, onShare, ownerLabel }: {
               sizes="(max-width: 640px) 50vw, 33vw"
             />
           ) : (
-            /* Placeholder estilo cartão */
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-indigo-100 flex flex-col justify-between p-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0">
@@ -77,7 +78,6 @@ function CartaoCard({ cartao, onShare, ownerLabel }: {
             </div>
           )}
 
-          {/* Overlay com nome ao passar o mouse / sempre em cartões com foto */}
           {cartao.foto_url && (
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 pt-4 pb-2">
               <p className="text-white text-xs font-semibold truncate">{cartao.nome || cartao.empresa || "Cartão"}</p>
@@ -87,16 +87,20 @@ function CartaoCard({ cartao, onShare, ownerLabel }: {
             </div>
           )}
 
-          {/* Badge de quem compartilhou */}
           {ownerLabel && (
             <div className="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded-full truncate max-w-[80%]">
               {ownerLabel}
             </div>
           )}
+
+          {badge && (
+            <div className="absolute top-2 right-2">
+              {badge}
+            </div>
+          )}
         </div>
       </Link>
 
-      {/* Botão compartilhar */}
       {onShare && (
         <button
           onClick={onShare}
@@ -110,13 +114,17 @@ function CartaoCard({ cartao, onShare, ownerLabel }: {
   );
 }
 
-export default function CartoesClient({ meus, recebidos }: Props) {
-  const [aba, setAba] = useState<"meus" | "recebidos">("meus");
+export default function CartoesClient({ meus, recebidos, compartilheiMap }: Props) {
+  const [aba, setAba] = useState<"meus" | "compartilhados">("meus");
   const [compartilhandoId, setCompartilhandoId] = useState<string | null>(null);
 
   const cartaoCompartilhando = compartilhandoId
     ? meus.find((c) => c.id === compartilhandoId)
     : null;
+
+  // Meus cartões que foram compartilhados
+  const meusCompartilhados = meus.filter((c) => compartilheiMap[c.id]);
+  const totalCompartilhados = meusCompartilhados.length + recebidos.length;
 
   return (
     <>
@@ -144,22 +152,22 @@ export default function CartoesClient({ meus, recebidos }: Props) {
           )}
         </button>
         <button
-          onClick={() => setAba("recebidos")}
+          onClick={() => setAba("compartilhados")}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition ${
-            aba === "recebidos" ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500"
+            aba === "compartilhados" ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500"
           }`}
         >
           <Users size={14} />
           Compartilhados
-          {recebidos.length > 0 && (
-            <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${aba === "recebidos" ? "bg-indigo-100 text-indigo-600" : "bg-gray-200 text-gray-500"}`}>
-              {recebidos.length}
+          {totalCompartilhados > 0 && (
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${aba === "compartilhados" ? "bg-indigo-100 text-indigo-600" : "bg-gray-200 text-gray-500"}`}>
+              {totalCompartilhados}
             </span>
           )}
         </button>
       </div>
 
-      {/* Grid */}
+      {/* Conteúdo */}
       {aba === "meus" ? (
         meus.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -185,20 +193,65 @@ export default function CartoesClient({ meus, recebidos }: Props) {
           </div>
         )
       ) : (
-        recebidos.length === 0 ? (
+        /* Aba Compartilhados */
+        meusCompartilhados.length === 0 && recebidos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-gray-700 font-medium mb-1">Nenhum cartão compartilhado</p>
-            <p className="text-sm text-gray-400">Quando alguém compartilhar um cartão com você, ele aparece aqui</p>
+            <p className="text-gray-700 font-medium mb-1">Nenhum compartilhamento ainda</p>
+            <p className="text-sm text-gray-400">Compartilhe cartões com outros usuários ou aguarde receber</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {recebidos.map((cartao) => (
-              <CartaoCard
-                key={cartao.id}
-                cartao={cartao}
-                ownerLabel={cartao.owner_nome || cartao.owner_email || undefined}
-              />
-            ))}
+          <div className="flex flex-col gap-6">
+            {/* Seção: Cartões que eu compartilhei */}
+            {meusCompartilhados.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <ArrowUpRight size={15} className="text-indigo-500" />
+                  <h2 className="text-sm font-semibold text-gray-700">Compartilhei</h2>
+                  <span className="text-xs bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full font-semibold">
+                    {meusCompartilhados.length}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {meusCompartilhados.map((cartao) => {
+                    const destinatarios = compartilheiMap[cartao.id] ?? [];
+                    return (
+                      <CartaoCard
+                        key={cartao.id}
+                        cartao={cartao}
+                        onShare={() => setCompartilhandoId(cartao.id)}
+                        badge={
+                          <span className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">
+                            {destinatarios.length} {destinatarios.length === 1 ? "pessoa" : "pessoas"}
+                          </span>
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Seção: Cartões compartilhados comigo */}
+            {recebidos.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <ArrowDownLeft size={15} className="text-green-500" />
+                  <h2 className="text-sm font-semibold text-gray-700">Recebi</h2>
+                  <span className="text-xs bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full font-semibold">
+                    {recebidos.length}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {recebidos.map((cartao) => (
+                    <CartaoCard
+                      key={cartao.id}
+                      cartao={cartao}
+                      ownerLabel={cartao.owner_nome || cartao.owner_email || undefined}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )
       )}

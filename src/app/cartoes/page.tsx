@@ -16,25 +16,31 @@ export default async function CartoesPage() {
   const avatar = user.user_metadata?.avatar_url ?? null;
 
   // Busca meus cartões e compartilhamentos em paralelo
-  const [{ data: meus }, { data: partilhas }] = await Promise.all([
+  const [{ data: meus }, { data: partilhasRecebidas }, { data: partilhasFeitas }] = await Promise.all([
     supabase
       .from("cartoes")
       .select("id, nome, empresa, cargo, email, telefone, foto_url")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
+    // Cartões compartilhados COMIGO
     supabase
       .from("cartoes_compartilhados")
-      .select("cartao_id, owner_id")
+      .select("cartao_id")
       .or(`shared_with_id.eq.${user.id},shared_with_email.eq.${user.email}`),
+    // Cartões que EU compartilhei (agrupado por cartao_id)
+    supabase
+      .from("cartoes_compartilhados")
+      .select("cartao_id, shared_with_email")
+      .eq("owner_id", user.id),
   ]);
 
-  // Busca os cartões compartilhados comigo (RLS permite via policy recipients_select_shared)
-  const cartaoIds = partilhas?.map((p) => p.cartao_id) ?? [];
-  const { data: recebidosRaw } = cartaoIds.length > 0
+  // Busca os cartões recebidos (RLS permite via policy recipients_select_shared)
+  const idsRecebidos = partilhasRecebidas?.map((p) => p.cartao_id) ?? [];
+  const { data: recebidosRaw } = idsRecebidos.length > 0
     ? await supabase
         .from("cartoes")
         .select("id, nome, empresa, cargo, email, telefone, foto_url")
-        .in("id", cartaoIds)
+        .in("id", idsRecebidos)
     : { data: [] };
 
   const recebidos = (recebidosRaw ?? []).map((c) => ({
@@ -42,6 +48,13 @@ export default async function CartoesPage() {
     owner_email: null as string | null,
     owner_nome: null as string | null,
   }));
+
+  // Monta mapa cartao_id → lista de destinatários (para "cartões que compartilhei")
+  const compartilheiMap: Record<string, string[]> = {};
+  for (const p of partilhasFeitas ?? []) {
+    if (!compartilheiMap[p.cartao_id]) compartilheiMap[p.cartao_id] = [];
+    compartilheiMap[p.cartao_id].push(p.shared_with_email);
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -74,7 +87,8 @@ export default async function CartoesPage() {
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
         <CartoesClient
           meus={meus ?? []}
-          recebidos={recebidos ?? []}
+          recebidos={recebidos}
+          compartilheiMap={compartilheiMap}
         />
       </main>
     </div>
