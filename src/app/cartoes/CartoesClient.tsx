@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft, Search, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const CompartilharModal = dynamic(() => import("@/components/CompartilharModal"), { ssr: false });
@@ -114,17 +114,35 @@ function CartaoCard({ cartao, onShare, ownerLabel, badge }: {
   );
 }
 
+function bate(cartao: Cartao, q: string) {
+  const t = q.toLowerCase();
+  return (
+    cartao.nome?.toLowerCase().includes(t) ||
+    cartao.empresa?.toLowerCase().includes(t) ||
+    cartao.cargo?.toLowerCase().includes(t) ||
+    cartao.email?.toLowerCase().includes(t) ||
+    cartao.telefone?.toLowerCase().includes(t)
+  );
+}
+
 export default function CartoesClient({ meus, recebidos, compartilheiMap }: Props) {
   const [aba, setAba] = useState<"meus" | "compartilhados">("meus");
   const [compartilhandoId, setCompartilhandoId] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
 
   const cartaoCompartilhando = compartilhandoId
     ? meus.find((c) => c.id === compartilhandoId)
     : null;
 
-  // Meus cartões que foram compartilhados
-  const meusCompartilhados = meus.filter((c) => compartilheiMap[c.id]);
-  const totalCompartilhados = meusCompartilhados.length + recebidos.length;
+  const q = busca.trim();
+  const meusFiltrados = useMemo(() => q ? meus.filter((c) => bate(c, q)) : meus, [meus, q]);
+  const recebidosFiltrados = useMemo(() => q ? recebidos.filter((c) => bate(c, q)) : recebidos, [recebidos, q]);
+  const meusCompartilhados = useMemo(
+    () => (q ? meus.filter((c) => compartilheiMap[c.id] && bate(c, q)) : meus.filter((c) => compartilheiMap[c.id])),
+    [meus, compartilheiMap, q]
+  );
+
+  const totalCompartilhados = meus.filter((c) => compartilheiMap[c.id]).length + recebidos.length;
 
   return (
     <>
@@ -135,6 +153,23 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
           onClose={() => setCompartilhandoId(null)}
         />
       )}
+
+      {/* Busca */}
+      <div className="relative mb-4">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Buscar por nome, empresa, e-mail..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="w-full bg-gray-100 rounded-xl pl-9 pr-9 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
+        {busca && (
+          <button onClick={() => setBusca("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <X size={15} />
+          </button>
+        )}
+      </div>
 
       {/* Abas */}
       <div className="flex bg-gray-100 rounded-2xl p-1 mb-5">
@@ -181,9 +216,11 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
               Adicionar cartão
             </Link>
           </div>
+        ) : meusFiltrados.length === 0 ? (
+          <p className="text-center text-gray-400 text-sm py-16">Nenhum cartão encontrado para "{busca}"</p>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {meus.map((cartao) => (
+            {meusFiltrados.map((cartao) => (
               <CartaoCard
                 key={cartao.id}
                 cartao={cartao}
@@ -194,7 +231,7 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
         )
       ) : (
         /* Aba Compartilhados */
-        meusCompartilhados.length === 0 && recebidos.length === 0 ? (
+        meusCompartilhados.length === 0 && recebidosFiltrados.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-gray-700 font-medium mb-1">Nenhum compartilhamento ainda</p>
             <p className="text-sm text-gray-400">Compartilhe cartões com outros usuários ou aguarde receber</p>
@@ -232,17 +269,17 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
             )}
 
             {/* Seção: Cartões compartilhados comigo */}
-            {recebidos.length > 0 && (
+            {recebidosFiltrados.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <ArrowDownLeft size={15} className="text-green-500" />
                   <h2 className="text-sm font-semibold text-gray-700">Recebi</h2>
                   <span className="text-xs bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full font-semibold">
-                    {recebidos.length}
+                    {recebidosFiltrados.length}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  {recebidos.map((cartao) => (
+                  {recebidosFiltrados.map((cartao) => (
                     <CartaoCard
                       key={cartao.id}
                       cartao={cartao}
