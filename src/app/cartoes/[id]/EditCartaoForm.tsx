@@ -3,9 +3,12 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe } from "lucide-react";
+import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe, Share2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+
+const CompartilharModal = dynamic(() => import("@/components/CompartilharModal"), { ssr: false });
 
 type Cartao = {
   id: string;
@@ -27,6 +30,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [compartilhando, setCompartilhando] = useState(false);
   const [novaFoto, setNovaFoto] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -91,6 +95,14 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      {compartilhando && (
+        <CompartilharModal
+          cartaoId={cartao.id}
+          cartaoNome={cartao.nome || cartao.empresa || "Cartão"}
+          onClose={() => setCompartilhando(false)}
+        />
+      )}
+
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -101,6 +113,15 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
             <h1 className="font-bold text-gray-900 truncate">{cartao.nome || "Cartão"}</h1>
           </div>
           <div className="flex items-center gap-2">
+            {!editing && (
+              <button
+                onClick={() => setCompartilhando(true)}
+                className="p-2 text-indigo-400 hover:text-indigo-600 transition"
+                title="Compartilhar"
+              >
+                <Share2 size={18} />
+              </button>
+            )}
             <button
               onClick={handleDelete}
               disabled={deleting}
