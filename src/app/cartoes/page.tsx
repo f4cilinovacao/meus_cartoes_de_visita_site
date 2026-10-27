@@ -15,16 +15,33 @@ export default async function CartoesPage() {
 
   const avatar = user.user_metadata?.avatar_url ?? null;
 
-  const [{ data: meus }, { data: recebidos }] = await Promise.all([
+  // Busca meus cartões e compartilhamentos em paralelo
+  const [{ data: meus }, { data: partilhas }] = await Promise.all([
     supabase
       .from("cartoes")
       .select("id, nome, empresa, cargo, email, telefone, foto_url")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
-      .from("cartoes_recebidos")
-      .select("id, nome, empresa, cargo, email, telefone, foto_url, owner_email, owner_nome"),
+      .from("cartoes_compartilhados")
+      .select("cartao_id, owner_id")
+      .or(`shared_with_id.eq.${user.id},shared_with_email.eq.${user.email}`),
   ]);
+
+  // Busca os cartões compartilhados comigo (RLS permite via policy recipients_select_shared)
+  const cartaoIds = partilhas?.map((p) => p.cartao_id) ?? [];
+  const { data: recebidosRaw } = cartaoIds.length > 0
+    ? await supabase
+        .from("cartoes")
+        .select("id, nome, empresa, cargo, email, telefone, foto_url")
+        .in("id", cartaoIds)
+    : { data: [] };
+
+  const recebidos = (recebidosRaw ?? []).map((c) => ({
+    ...c,
+    owner_email: null as string | null,
+    owner_nome: null as string | null,
+  }));
 
   return (
     <div className="min-h-screen flex flex-col">
