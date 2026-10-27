@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CreditCard } from "lucide-react";
+import Image from "next/image";
 
 export default function TermosPage() {
   return (
@@ -7,9 +7,7 @@ export default function TermosPage() {
       <nav className="bg-white border-b">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
-            <div className="bg-indigo-600 rounded-lg p-1.5">
-              <CreditCard size={16} className="text-white" />
-            </div>
+            <Image src="/favicon.svg" alt="" width={26} height={26} aria-hidden="true" />
             <span className="font-bold text-gray-900 text-sm">Meus Cartões de Visita</span>
           </Link>
         </div>

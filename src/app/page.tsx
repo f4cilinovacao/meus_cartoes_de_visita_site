@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CreditCard, Search, Tag, Share2, Camera, CheckCircle, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { Search, Tag, Share2, Camera, CheckCircle, ArrowRight } from "lucide-react";
 
 export default function Home() {
   return (
@@ -8,9 +9,7 @@ export default function Home() {
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-indigo-600 rounded-lg p-1.5">
-              <CreditCard size={18} className="text-white" />
-            </div>
+            <Image src="/favicon.svg" alt="Meus Cartões de Visita" width={28} height={28} />
             <span className="font-bold text-gray-900 text-sm sm:text-base">Meus Cartões de Visita</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -176,9 +175,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="py-8 px-4 text-center bg-white border-t border-gray-100">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="bg-indigo-600 rounded-lg p-1">
-            <CreditCard size={14} className="text-white" />
-          </div>
+          <Image src="/favicon.svg" alt="" width={22} height={22} aria-hidden="true" />
           <span className="font-semibold text-gray-700 text-sm">Meus Cartões de Visita</span>
         </div>
         <p className="text-xs text-gray-400">© 2025 · Todos os direitos reservados</p>

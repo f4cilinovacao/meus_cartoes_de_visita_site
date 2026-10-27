@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus, CreditCard, LogOut } from "lucide-react";
+import Image from "next/image";
+import { Plus, LogOut } from "lucide-react";
 
 export const instant = false;
 
@@ -22,7 +23,7 @@ export default async function CartoesPage() {
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CreditCard size={20} className="text-indigo-600" />
+            <Image src="/favicon.svg" alt="" width={26} height={26} aria-hidden="true" />
             <span className="font-bold text-gray-900">Meus Cartões</span>
           </div>
           <form action="/api/auth/signout" method="post">

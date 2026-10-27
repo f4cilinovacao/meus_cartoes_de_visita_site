@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { CreditCard } from "lucide-react";
+import Image from "next/image";
 
 function GoogleIcon() {
   return (
@@ -64,9 +64,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="bg-indigo-600 rounded-lg p-1.5">
-            <CreditCard size={18} className="text-white" />
-          </div>
+          <Image src="/favicon.svg" alt="Meus Cartões de Visita" width={32} height={32} />
           <span className="font-bold text-gray-900">Meus Cartões de Visita</span>
         </div>
 
