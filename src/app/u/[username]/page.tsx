@@ -48,8 +48,8 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
 
   return (
     <>
-    <style>{`body { background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 50%, #dbeafe 100%) !important; min-height: 100vh; }`}</style>
-    <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4" style={{ background: "linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 50%, #dbeafe 100%)" }}>
+    <style>{`body { background: url('/bg-cartao-virtual.webp') center center / cover no-repeat fixed !important; min-height: 100vh; }`}</style>
+    <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4">
       <div className="w-full max-w-sm flex flex-col gap-5">
 
         {/* Card principal */}
