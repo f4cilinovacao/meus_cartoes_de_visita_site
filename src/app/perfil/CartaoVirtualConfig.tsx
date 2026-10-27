@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, ExternalLink, Check, Globe } from "lucide-react";
+import { Loader2, ExternalLink, Check, Globe, Copy } from "lucide-react";
 
 interface PerfilPublico {
   username: string;
@@ -21,6 +21,7 @@ interface PerfilPublico {
   facebook: string | null;
   bio: string | null;
   foto_url: string | null;
+  short_code: string | null;
   ativo: boolean;
 }
 
@@ -49,11 +50,19 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
     facebook: perfilAtual?.facebook ?? "",
     bio: perfilAtual?.bio ?? "",
     foto_url: perfilAtual?.foto_url ?? avatarUrl ?? "",
+    short_code: perfilAtual?.short_code ?? "",
     ativo: perfilAtual?.ativo ?? true,
   });
   const [saving, setSaving] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState(false);
+  const [copiado, setCopiado] = useState<"normal" | "curto" | null>(null);
+
+  function copiar(texto: string, tipo: "normal" | "curto") {
+    navigator.clipboard.writeText(texto);
+    setCopiado(tipo);
+    setTimeout(() => setCopiado(null), 2000);
+  }
 
   function set(field: keyof PerfilPublico) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -74,7 +83,8 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
     }
 
     const supabase = createClient();
-    const payload = { ...form, username, id: userId };
+    const short_code = form.short_code || Math.random().toString(36).slice(2, 8);
+    const payload = { ...form, username, short_code, id: userId };
 
     const { error } = perfilAtual
       ? await supabase.from("perfis_publicos").update(payload).eq("id", userId)
@@ -83,13 +93,16 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
     if (error) {
       setErro(error.message.includes("unique") ? "Esse username já está em uso" : error.message);
     } else {
+      setForm((f) => ({ ...f, short_code }));
       setSucesso(true);
       setTimeout(() => setSucesso(false), 3000);
     }
     setSaving(false);
   }
 
-  const url = `meuscartoesdevisita.com.br/u/${form.username || "username"}`;
+  const BASE = "meuscartoesdevisita.com.br";
+  const urlNormal = `https://${BASE}/u/${form.username || "username"}`;
+  const urlCurta = form.short_code ? `https://${BASE}/s/${form.short_code}` : null;
 
   return (
     <div className="bg-white rounded-2xl border p-5 flex flex-col gap-4">
@@ -109,10 +122,31 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
         )}
       </div>
 
-      <p className="text-xs text-gray-500">
-        Crie uma página pública com seus contatos para compartilhar.
-        Ficará disponível em: <span className="font-mono text-indigo-600">{url}</span>
-      </p>
+      {/* Links */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5">Link normal</p>
+            <p className="text-xs font-mono text-indigo-600 truncate max-w-[220px]">{BASE}/u/{form.username || "username"}</p>
+          </div>
+          <button onClick={() => copiar(urlNormal, "normal")} className="text-gray-400 hover:text-indigo-600 transition p-1">
+            {copiado === "normal" ? <Check size={15} className="text-green-500" /> : <Copy size={15} />}
+          </button>
+        </div>
+        {urlCurta ? (
+          <div className="flex items-center justify-between bg-indigo-50 rounded-xl px-3 py-2">
+            <div>
+              <p className="text-xs text-indigo-400 mb-0.5">Link curto</p>
+              <p className="text-xs font-mono text-indigo-700 font-semibold">{BASE}/s/{form.short_code}</p>
+            </div>
+            <button onClick={() => copiar(urlCurta, "curto")} className="text-indigo-400 hover:text-indigo-700 transition p-1">
+              {copiado === "curto" ? <Check size={15} className="text-green-500" /> : <Copy size={15} />}
+            </button>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-400 italic">O link curto será gerado automaticamente ao salvar.</p>
+        )}
+      </div>
 
       <form onSubmit={handleSave} className="flex flex-col gap-3">
         {/* Username */}
