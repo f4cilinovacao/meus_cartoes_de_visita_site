@@ -13,6 +13,8 @@ export default async function CartoesPage() {
 
   if (!user) redirect("/login");
 
+  const avatar = user.user_metadata?.avatar_url ?? null;
+
   const [{ data: meus }, { data: recebidos }] = await Promise.all([
     supabase
       .from("cartoes")
@@ -29,13 +31,23 @@ export default async function CartoesPage() {
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <Image src="/logo.svg" alt="Meus Cartões de Visita" width={140} height={35} />
-          <div className="flex items-center gap-1">
-            <Link href="/perfil" className="p-2 text-gray-400 hover:text-indigo-600 transition">
-              <UserCircle size={22} />
+          <div className="flex items-center gap-2">
+            <Link href="/perfil" className="hover:opacity-80 transition">
+              {avatar ? (
+                <Image
+                  src={avatar}
+                  alt="Perfil"
+                  width={32}
+                  height={32}
+                  className="rounded-full object-cover w-8 h-8 border border-gray-200"
+                />
+              ) : (
+                <UserCircle size={28} className="text-gray-400 hover:text-indigo-600 transition" />
+              )}
             </Link>
             <form action="/api/auth/signout" method="post">
-              <button className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 transition py-2 px-1">
-                <LogOut size={16} />
+              <button className="text-gray-400 hover:text-red-500 transition p-1">
+                <LogOut size={18} />
               </button>
             </form>
           </div>
