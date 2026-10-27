@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe, Share2 } from "lucide-react";
+import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe, Share2, FlipHorizontal } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -22,18 +22,22 @@ type Cartao = {
   endereco: string | null;
   notas: string | null;
   foto_url: string | null;
+  foto_verso: string | null;
   user_id: string;
 };
 
 export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const fileVersoRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [compartilhando, setCompartilhando] = useState(false);
   const [novaFoto, setNovaFoto] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [novaFotoVerso, setNovaFotoVerso] = useState<File | null>(null);
+  const [fotoVersoPreview, setFotoVersoPreview] = useState<string | null>(null);
   const [form, setForm] = useState({
     nome: cartao.nome ?? "",
     empresa: cartao.empresa ?? "",
@@ -58,28 +62,40 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
     setFotoPreview(URL.createObjectURL(file));
   }
 
+  function handleFotoVerso(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setNovaFotoVerso(file);
+    setFotoVersoPreview(URL.createObjectURL(file));
+  }
+
+  async function uploadFoto(file: File, userId: string): Promise<string | null> {
+    const supabase = createClient();
+    const path = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+    const { error } = await supabase.storage.from("cartoes-fotos").upload(path, file);
+    if (error) return null;
+    const { data } = supabase.storage.from("cartoes-fotos").getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   async function handleSave() {
     setSaving(true);
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     let foto_url = cartao.foto_url;
+    let foto_verso = cartao.foto_verso;
 
-    if (novaFoto) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const ext = novaFoto.name.split(".").pop();
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("cartoes-fotos")
-          .upload(path, novaFoto);
-        if (!uploadError) {
-          const { data } = supabase.storage.from("cartoes-fotos").getPublicUrl(path);
-          foto_url = data.publicUrl;
-        }
-      }
+    if (user) {
+      const [novaUrl, novaVersoUrl] = await Promise.all([
+        novaFoto ? uploadFoto(novaFoto, user.id) : Promise.resolve(null),
+        novaFotoVerso ? uploadFoto(novaFotoVerso, user.id) : Promise.resolve(null),
+      ]);
+      if (novaUrl) foto_url = novaUrl;
+      if (novaVersoUrl) foto_verso = novaVersoUrl;
     }
 
-    await supabase.from("cartoes").update({ ...form, foto_url }).eq("id", cartao.id);
+    await supabase.from("cartoes").update({ ...form, foto_url, foto_verso }).eq("id", cartao.id);
     setSaving(false);
     setEditing(false);
     router.refresh();
@@ -94,6 +110,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
   }
 
   const fotoAtual = fotoPreview ?? cartao.foto_url;
+  const fotoVersoAtual = fotoVersoPreview ?? cartao.foto_verso;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -144,32 +161,64 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
 
       <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-6 flex flex-col gap-6">
 
-        {/* Foto */}
-        {fotoAtual ? (
-          <div className="relative rounded-2xl overflow-hidden border bg-gray-100 aspect-[16/9]">
-            <Image src={fotoAtual} alt="Foto do cartão" fill className="object-contain" />
-            {editing && (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="absolute bottom-2 right-2 bg-black/60 text-white rounded-full px-3 py-1 text-xs flex items-center gap-1"
-              >
-                <Camera size={12} /> Trocar foto
-              </button>
+        {/* Fotos */}
+        <div className="flex flex-col gap-3">
+          {/* Frente */}
+          <div>
+            {(fotoAtual || editing) && (
+              <p className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Frente</p>
             )}
+            {fotoAtual ? (
+              <div className="relative rounded-2xl overflow-hidden border bg-gray-100 aspect-[16/9]">
+                <Image src={fotoAtual} alt="Frente do cartão" fill className="object-contain" />
+                {editing && (
+                  <button type="button" onClick={() => fileRef.current?.click()}
+                    className="absolute bottom-2 right-2 bg-black/60 text-white rounded-lg px-2 py-1 text-xs flex items-center gap-1">
+                    <Camera size={12} /> Trocar foto
+                  </button>
+                )}
+              </div>
+            ) : editing ? (
+              <button type="button" onClick={() => fileRef.current?.click()}
+                className="w-full border-2 border-dashed border-indigo-300 rounded-2xl py-8 flex flex-col items-center gap-2 text-indigo-400 hover:bg-indigo-50 transition">
+                <Camera size={28} />
+                <span className="text-sm font-medium">Adicionar foto da frente</span>
+              </button>
+            ) : null}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFoto} />
           </div>
-        ) : editing ? (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="w-full border-2 border-dashed border-indigo-300 rounded-2xl py-8 flex flex-col items-center gap-2 text-indigo-400 hover:bg-indigo-50 transition"
-          >
-            <Camera size={28} />
-            <span className="text-sm font-medium">Adicionar foto</span>
-          </button>
-        ) : null}
 
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFoto} />
+          {/* Verso */}
+          {(fotoAtual || fotoVersoAtual) && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Verso</p>
+              {fotoVersoAtual ? (
+                <div className="relative rounded-2xl overflow-hidden border bg-gray-100 aspect-[16/9]">
+                  <Image src={fotoVersoAtual} alt="Verso do cartão" fill className="object-contain" />
+                  {editing && (
+                    <button type="button" onClick={() => fileVersoRef.current?.click()}
+                      className="absolute bottom-2 right-2 bg-black/60 text-white rounded-lg px-2 py-1 text-xs flex items-center gap-1">
+                      <Camera size={12} /> Trocar foto
+                    </button>
+                  )}
+                  {editing && (
+                    <button type="button" onClick={() => { setNovaFotoVerso(null); setFotoVersoPreview("__remove__"); }}
+                      className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1">
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+              ) : editing ? (
+                <button type="button" onClick={() => fileVersoRef.current?.click()}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-2xl py-6 flex flex-col items-center gap-2 text-gray-400 hover:bg-gray-50 transition">
+                  <FlipHorizontal size={24} />
+                  <span className="text-sm font-medium">Adicionar foto do verso</span>
+                </button>
+              ) : null}
+              <input ref={fileVersoRef} type="file" accept="image/*" className="hidden" onChange={handleFotoVerso} />
+            </div>
+          )}
+        </div>
 
         {/* Ações rápidas (modo visualização) */}
         {!editing && (cartao.email || cartao.telefone || cartao.site) && (
