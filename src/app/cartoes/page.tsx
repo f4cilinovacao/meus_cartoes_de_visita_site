@@ -40,7 +40,7 @@ export default async function CartoesPage() {
         {!cartoes || cartoes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="bg-indigo-50 rounded-full p-5 mb-4">
-              <CreditCard size={32} className="text-indigo-400" />
+              <Image src="/favicon.svg" alt="" width={32} height={32} aria-hidden="true" />
             </div>
             <p className="text-gray-700 font-medium mb-1">Nenhum cartão ainda</p>
             <p className="text-sm text-gray-400 mb-6">Adicione o primeiro cartão que você recebeu</p>
