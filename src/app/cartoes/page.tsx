@@ -16,8 +16,8 @@ export default async function CartoesPage() {
 
   const avatar = user.user_metadata?.avatar_url ?? null;
 
-  // Busca meus cartões, compartilhamentos e grupos em paralelo
-  const [{ data: meus }, { data: partilhasRecebidas }, { data: partilhasFeitas }, { data: grupos }] = await Promise.all([
+  // Busca meus cartões, compartilhamentos, grupos e conexões em paralelo
+  const [{ data: meus }, { data: partilhasRecebidas }, { data: partilhasFeitas }, { data: grupos }, { data: conexoesBruto }] = await Promise.all([
     supabase
       .from("cartoes")
       .select("id, nome, empresa, cargo, email, telefone, foto_url, tags, visibilidade, cartoes_grupos(grupo_id)")
@@ -39,6 +39,12 @@ export default async function CartoesPage() {
       .select("id, nome, cor")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true }),
+    // Conexões (pendentes e aceitas)
+    supabase
+      .from("conexoes")
+      .select("id, status, solicitante_id, destinatario_id, created_at")
+      .or(`solicitante_id.eq.${user.id},destinatario_id.eq.${user.id}`)
+      .order("created_at", { ascending: false }),
   ]);
 
   // Busca os cartões recebidos (RLS permite via policy recipients_select_shared)
@@ -62,6 +68,20 @@ export default async function CartoesPage() {
     if (!compartilheiMap[p.cartao_id]) compartilheiMap[p.cartao_id] = [];
     compartilheiMap[p.cartao_id].push(p.shared_with_email);
   }
+
+  // Busca perfis dos usuários conectados para mostrar nome/foto
+  const conexoes = conexoesBruto ?? [];
+  const outrosIds = conexoes.map((cx) => cx.solicitante_id === user.id ? cx.destinatario_id : cx.solicitante_id);
+  const { data: perfisConexoes } = outrosIds.length > 0
+    ? await supabase.from("perfis_publicos").select("id, username, nome, foto_url").in("id", outrosIds)
+    : { data: [] };
+  const perfilMap: Record<string, { username: string; nome: string | null; foto_url: string | null }> = {};
+  for (const p of perfisConexoes ?? []) perfilMap[p.id] = p;
+
+  const conexoesComPerfil = conexoes.map((cx) => {
+    const outroId = cx.solicitante_id === user.id ? cx.destinatario_id : cx.solicitante_id;
+    return { ...cx, outro: perfilMap[outroId] ?? null, souSolicitante: cx.solicitante_id === user.id };
+  });
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -103,6 +123,8 @@ export default async function CartoesPage() {
           recebidos={recebidos}
           compartilheiMap={compartilheiMap}
           grupos={grupos ?? []}
+          conexoes={conexoesComPerfil}
+          meuUserId={user.id}
         />
       </main>
     </div>

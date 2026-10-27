@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft, Search, X, Tag, Globe, Lock, FolderOpen, Trash2, Check } from "lucide-react";
+import { Plus, Share2, Users, UserCheck, UserX, Clock, ArrowUpRight, ArrowDownLeft, Search, X, Tag, Globe, Lock, FolderOpen, Trash2, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -34,11 +34,22 @@ interface CartaoRecebido extends Cartao {
   owner_nome: string | null;
 }
 
+interface Conexao {
+  id: string;
+  status: string;
+  solicitante_id: string;
+  destinatario_id: string;
+  souSolicitante: boolean;
+  outro: { username: string; nome: string | null; foto_url: string | null } | null;
+}
+
 interface Props {
   meus: Cartao[];
   recebidos: CartaoRecebido[];
   compartilheiMap: Record<string, string[]>;
   grupos: Grupo[];
+  conexoes: Conexao[];
+  meuUserId: string;
 }
 
 function VisibilidadeBadge({ visibilidade }: { visibilidade?: string | null }) {
@@ -183,9 +194,10 @@ const COR_MAP: Record<string, { bg: string; text: string; border: string; dot: s
 };
 const CORES = Object.keys(COR_MAP);
 
-export default function CartoesClient({ meus, recebidos, compartilheiMap, grupos: gruposInicial }: Props) {
+export default function CartoesClient({ meus, recebidos, compartilheiMap, grupos: gruposInicial, conexoes: conexoesInicial, meuUserId }: Props) {
   const router = useRouter();
-  const [aba, setAba] = useState<"meus" | "compartilhados">("meus");
+  const [aba, setAba] = useState<"meus" | "compartilhados" | "conexoes">("meus");
+  const [conexoes, setConexoes] = useState<Conexao[]>(conexoesInicial);
   const [compartilhandoId, setCompartilhandoId] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [tagAtiva, setTagAtiva] = useState("");
@@ -221,6 +233,22 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap, grupos
     if (grupoAtivo === id) setGrupoAtivo(null);
     router.refresh();
   }
+
+  async function aceitarConexao(id: string) {
+    const supabase = createClient();
+    await supabase.from("conexoes").update({ status: "aceita" }).eq("id", id);
+    setConexoes((cs) => cs.map((c) => c.id === id ? { ...c, status: "aceita" } : c));
+  }
+
+  async function rejeitarConexao(id: string) {
+    const supabase = createClient();
+    await supabase.from("conexoes").delete().eq("id", id);
+    setConexoes((cs) => cs.filter((c) => c.id !== id));
+  }
+
+  const pendentesRecebidas = conexoes.filter((c) => c.status === "pendente" && !c.souSolicitante);
+  const aceitas = conexoes.filter((c) => c.status === "aceita");
+  const totalConexoes = conexoes.length;
 
   const cartaoCompartilhando = compartilhandoId
     ? meus.find((c) => c.id === compartilhandoId)
@@ -395,35 +423,130 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap, grupos
       <div className="flex bg-gray-100 rounded-2xl p-1 mb-5">
         <button
           onClick={() => setAba("meus")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition ${
             aba === "meus" ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500"
           }`}
         >
           Meus cartões
           {meus.length > 0 && (
-            <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${aba === "meus" ? "bg-indigo-100 text-indigo-600" : "bg-gray-200 text-gray-500"}`}>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${aba === "meus" ? "bg-indigo-100 text-indigo-600" : "bg-gray-200 text-gray-500"}`}>
               {meus.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setAba("compartilhados")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition ${
             aba === "compartilhados" ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500"
           }`}
         >
-          <Users size={14} />
-          Compartilhados
+          <Share2 size={13} />
+          Partilhados
           {totalCompartilhados > 0 && (
-            <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${aba === "compartilhados" ? "bg-indigo-100 text-indigo-600" : "bg-gray-200 text-gray-500"}`}>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${aba === "compartilhados" ? "bg-indigo-100 text-indigo-600" : "bg-gray-200 text-gray-500"}`}>
               {totalCompartilhados}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setAba("conexoes")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition relative ${
+            aba === "conexoes" ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500"
+          }`}
+        >
+          <Users size={13} />
+          Conexões
+          {pendentesRecebidas.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-bold">
+              {pendentesRecebidas.length}
+            </span>
+          )}
+          {totalConexoes > 0 && pendentesRecebidas.length === 0 && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${aba === "conexoes" ? "bg-indigo-100 text-indigo-600" : "bg-gray-200 text-gray-500"}`}>
+              {totalConexoes}
             </span>
           )}
         </button>
       </div>
 
       {/* Conteúdo */}
-      {aba === "meus" ? (
+      {aba === "conexoes" ? (
+        <div className="flex flex-col gap-6">
+          {/* Solicitações pendentes recebidas */}
+          {pendentesRecebidas.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Clock size={15} className="text-amber-500" />
+                <h2 className="text-sm font-semibold text-gray-700">Solicitações recebidas</h2>
+                <span className="text-xs bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-semibold">{pendentesRecebidas.length}</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                {pendentesRecebidas.map((cx) => (
+                  <div key={cx.id} className="bg-white border rounded-2xl px-4 py-3 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 overflow-hidden shrink-0">
+                      {cx.outro?.foto_url
+                        ? <Image src={cx.outro.foto_url} alt="" width={40} height={40} className="object-cover w-full h-full" />
+                        : <div className="w-full h-full flex items-center justify-center text-indigo-600 font-bold text-lg">{(cx.outro?.nome ?? "?")[0].toUpperCase()}</div>
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{cx.outro?.nome ?? cx.outro?.username ?? "Usuário"}</p>
+                      {cx.outro?.username && <p className="text-xs text-gray-400">@{cx.outro.username}</p>}
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => aceitarConexao(cx.id)} className="p-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition">
+                        <UserCheck size={16} />
+                      </button>
+                      <button onClick={() => rejeitarConexao(cx.id)} className="p-2 rounded-xl border-2 border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500 transition">
+                        <UserX size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Conexões aceitas */}
+          {aceitas.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <UserCheck size={15} className="text-green-500" />
+                <h2 className="text-sm font-semibold text-gray-700">Conexões</h2>
+                <span className="text-xs bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full font-semibold">{aceitas.length}</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                {aceitas.map((cx) => (
+                  <Link key={cx.id} href={cx.outro ? `/u/${cx.outro.username}` : "#"} className="bg-white border rounded-2xl px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 overflow-hidden shrink-0">
+                      {cx.outro?.foto_url
+                        ? <Image src={cx.outro.foto_url} alt="" width={40} height={40} className="object-cover w-full h-full" />
+                        : <div className="w-full h-full flex items-center justify-center text-indigo-600 font-bold text-lg">{(cx.outro?.nome ?? "?")[0].toUpperCase()}</div>
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{cx.outro?.nome ?? cx.outro?.username ?? "Usuário"}</p>
+                      {cx.outro?.username && <p className="text-xs text-gray-400">@{cx.outro.username}</p>}
+                    </div>
+                    <ArrowUpRight size={16} className="text-gray-300 shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {conexoes.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <Users size={40} className="text-gray-200 mb-3" />
+              <p className="text-gray-700 font-medium mb-1">Nenhuma conexão ainda</p>
+              <p className="text-sm text-gray-400 mb-4">Explore cartões de outras pessoas e se conecte</p>
+              <Link href="/explorar" className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition">
+                🔍 Explorar cartões
+              </Link>
+            </div>
+          )}
+        </div>
+      ) : aba === "meus" ? (
         meus.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-gray-700 font-medium mb-1">Nenhum cartão ainda</p>

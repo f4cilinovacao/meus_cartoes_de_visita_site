@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Phone, Mail, Globe, MapPin, Building2, Tag } from "lucide-react";
+import ConexaoButton from "./ConexaoButton";
 
 export const instant = false;
 
@@ -12,12 +13,32 @@ export default async function ExplorarCartaoPage({ params }: { params: Promise<{
 
   const { data: c } = await supabase
     .from("cartoes")
-    .select("id, nome, empresa, cargo, email, telefone, site, instagram, endereco, foto_url, foto_verso, tags, notas")
+    .select("id, user_id, nome, empresa, cargo, email, telefone, site, instagram, endereco, foto_url, foto_verso, tags, notas")
     .eq("id", id)
     .eq("visibilidade", "publico")
     .maybeSingle();
 
   if (!c) notFound();
+
+  // Verifica se o usuário está logado e a relação de conexão com o dono do cartão
+  const { data: { user } } = await supabase.auth.getUser();
+  let conexaoStatus: "nenhum" | "pendente_enviada" | "pendente_recebida" | "aceita" = "nenhum";
+  let conexaoId: string | undefined;
+  const ehMeuCartao = user?.id === c.user_id;
+
+  if (user && !ehMeuCartao) {
+    const { data: cx } = await supabase
+      .from("conexoes")
+      .select("id, status, solicitante_id")
+      .or(`and(solicitante_id.eq.${user.id},destinatario_id.eq.${c.user_id}),and(solicitante_id.eq.${c.user_id},destinatario_id.eq.${user.id})`)
+      .maybeSingle();
+    if (cx) {
+      conexaoId = cx.id;
+      if (cx.status === "aceita") conexaoStatus = "aceita";
+      else if (cx.solicitante_id === user.id) conexaoStatus = "pendente_enviada";
+      else conexaoStatus = "pendente_recebida";
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,6 +65,24 @@ export default async function ExplorarCartaoPage({ params }: { params: Promise<{
           <div className="rounded-2xl overflow-hidden border bg-gray-100 aspect-[16/9] relative">
             <Image src={c.foto_verso} alt="Verso do cartão" fill className="object-contain" />
           </div>
+        )}
+
+        {/* Botão conexão */}
+        {user && !ehMeuCartao && (
+          <ConexaoButton
+            cartaoUserId={c.user_id}
+            meuUserId={user.id}
+            statusInicial={conexaoStatus}
+            conexaoId={conexaoId}
+          />
+        )}
+        {!user && (
+          <Link
+            href="/login"
+            className="flex items-center justify-center gap-2 border-2 border-indigo-200 text-indigo-600 px-5 py-3.5 rounded-2xl font-semibold text-sm hover:bg-indigo-50 transition"
+          >
+            Entre para se conectar
+          </Link>
         )}
 
         {/* Ações rápidas */}
