@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe, Share2, FlipHorizontal, Download, Lock } from "lucide-react";
+import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe, Share2, FlipHorizontal, Download, Lock, FolderOpen } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -29,6 +29,7 @@ type Cartao = {
   created_at: string | null;
   user_id: string;
   visibilidade: string | null;
+  grupo_id: string | null;
 };
 
 export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
@@ -45,6 +46,14 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
   const [fotoVersoPreview, setFotoVersoPreview] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>(cartao.tags ?? []);
   const [visibilidade, setVisibilidade] = useState<"privado" | "publico">((cartao.visibilidade as "privado" | "publico") ?? "privado");
+  const [grupoId, setGrupoId] = useState<string | null>(cartao.grupo_id);
+  const [grupos, setGrupos] = useState<{ id: string; nome: string; cor: string }[]>([]);
+
+  useEffect(() => {
+    createClient().from("grupos").select("id, nome, cor").order("created_at").then(({ data }) => {
+      if (data) setGrupos(data);
+    });
+  }, []);
   const [form, setForm] = useState({
     nome: cartao.nome ?? "",
     empresa: cartao.empresa ?? "",
@@ -102,7 +111,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
       if (novaVersoUrl) foto_verso = novaVersoUrl;
     }
 
-    await supabase.from("cartoes").update({ ...form, foto_url, foto_verso, tags, visibilidade }).eq("id", cartao.id);
+    await supabase.from("cartoes").update({ ...form, foto_url, foto_verso, tags, visibilidade, grupo_id: grupoId }).eq("id", cartao.id);
     setSaving(false);
     setEditing(false);
     router.refresh();
@@ -381,6 +390,38 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
               </div>
             )}
           </div>
+
+          {/* Grupo */}
+          {(editing && grupos.length > 0) && (
+            <div className="px-4 py-3">
+              <label className="text-sm text-gray-400 block mb-2 flex items-center gap-1"><FolderOpen size={13} /> Grupo</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGrupoId(null)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${!grupoId ? "border-gray-700 bg-gray-100 text-gray-800" : "border-gray-200 text-gray-500"}`}
+                >
+                  Nenhum
+                </button>
+                {grupos.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setGrupoId(g.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${grupoId === g.id ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600"}`}
+                  >
+                    {g.nome}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {!editing && grupoId && grupos.find((g) => g.id === grupoId) && (
+            <div className="px-4 py-3 flex items-center gap-1.5 text-sm text-gray-700">
+              <FolderOpen size={14} className="text-indigo-400" />
+              <span>{grupos.find((g) => g.id === grupoId)?.nome}</span>
+            </div>
+          )}
         </div>
 
         {/* Histórico */}

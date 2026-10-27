@@ -3,7 +3,9 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft, Search, X, Tag, Globe, Lock } from "lucide-react";
+import { Plus, Share2, Users, ArrowUpRight, ArrowDownLeft, Search, X, Tag, Globe, Lock, FolderOpen, Trash2, Check } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
 const CompartilharModal = dynamic(() => import("@/components/CompartilharModal"), { ssr: false });
@@ -18,6 +20,13 @@ interface Cartao {
   foto_url: string | null;
   tags?: string[] | null;
   visibilidade?: string | null;
+  grupo_id?: string | null;
+}
+
+interface Grupo {
+  id: string;
+  nome: string;
+  cor: string;
 }
 
 interface CartaoRecebido extends Cartao {
@@ -29,6 +38,7 @@ interface Props {
   meus: Cartao[];
   recebidos: CartaoRecebido[];
   compartilheiMap: Record<string, string[]>;
+  grupos: Grupo[];
 }
 
 function VisibilidadeBadge({ visibilidade }: { visibilidade?: string | null }) {
@@ -46,11 +56,12 @@ function VisibilidadeBadge({ visibilidade }: { visibilidade?: string | null }) {
   );
 }
 
-function CartaoCard({ cartao, onShare, ownerLabel, badge }: {
+function CartaoCard({ cartao, onShare, ownerLabel, badge, grupoMap }: {
   cartao: Cartao;
   onShare?: () => void;
   ownerLabel?: string;
   badge?: React.ReactNode;
+  grupoMap?: Record<string, Grupo>;
 }) {
   const inicial = (cartao.nome ?? cartao.empresa ?? "?")[0].toUpperCase();
 
@@ -110,8 +121,17 @@ function CartaoCard({ cartao, onShare, ownerLabel, badge }: {
             </div>
           )}
 
-          <div className="absolute bottom-2 left-2">
+          <div className="absolute bottom-2 left-2 flex items-center gap-1">
             <VisibilidadeBadge visibilidade={cartao.visibilidade} />
+            {cartao.grupo_id && grupoMap?.[cartao.grupo_id] && (() => {
+              const g = grupoMap[cartao.grupo_id!]!;
+              const cor = COR_MAP[g.cor] ?? COR_MAP.indigo;
+              return (
+                <span className={`flex items-center gap-0.5 ${cor.bg} ${cor.text} text-[10px] px-1.5 py-0.5 rounded-full font-semibold`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${cor.dot}`} />{g.nome}
+                </span>
+              );
+            })()}
           </div>
 
           {badge && (
@@ -149,11 +169,54 @@ function bate(cartao: Cartao, q: string, tag: string) {
   );
 }
 
-export default function CartoesClient({ meus, recebidos, compartilheiMap }: Props) {
+const COR_MAP: Record<string, { bg: string; text: string; border: string; dot: string }> = {
+  indigo: { bg: "bg-indigo-100", text: "text-indigo-700", border: "border-indigo-400", dot: "bg-indigo-500" },
+  blue:   { bg: "bg-blue-100",   text: "text-blue-700",   border: "border-blue-400",   dot: "bg-blue-500" },
+  green:  { bg: "bg-green-100",  text: "text-green-700",  border: "border-green-400",  dot: "bg-green-500" },
+  yellow: { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-400", dot: "bg-yellow-500" },
+  red:    { bg: "bg-red-100",    text: "text-red-700",    border: "border-red-400",    dot: "bg-red-500" },
+  pink:   { bg: "bg-pink-100",   text: "text-pink-700",   border: "border-pink-400",   dot: "bg-pink-500" },
+  purple: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-400", dot: "bg-purple-500" },
+  gray:   { bg: "bg-gray-100",   text: "text-gray-700",   border: "border-gray-400",   dot: "bg-gray-500" },
+};
+const CORES = Object.keys(COR_MAP);
+
+export default function CartoesClient({ meus, recebidos, compartilheiMap, grupos: gruposInicial }: Props) {
+  const router = useRouter();
   const [aba, setAba] = useState<"meus" | "compartilhados">("meus");
   const [compartilhandoId, setCompartilhandoId] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [tagAtiva, setTagAtiva] = useState("");
+  const [grupoAtivo, setGrupoAtivo] = useState<string | null>(null);
+  const [grupos, setGrupos] = useState<Grupo[]>(gruposInicial);
+  const [novoGrupoAberto, setNovoGrupoAberto] = useState(false);
+  const [novoGrupoNome, setNovoGrupoNome] = useState("");
+  const [novoGrupoCor, setNovoGrupoCor] = useState("indigo");
+  const [salvandoGrupo, setSalvandoGrupo] = useState(false);
+
+  async function criarGrupo() {
+    if (!novoGrupoNome.trim()) return;
+    setSalvandoGrupo(true);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("grupos")
+      .insert({ nome: novoGrupoNome.trim(), cor: novoGrupoCor })
+      .select("id, nome, cor")
+      .single();
+    if (data) setGrupos((g) => [...g, data]);
+    setNovoGrupoNome("");
+    setNovoGrupoAberto(false);
+    setSalvandoGrupo(false);
+    router.refresh();
+  }
+
+  async function deletarGrupo(id: string) {
+    const supabase = createClient();
+    await supabase.from("grupos").delete().eq("id", id);
+    setGrupos((g) => g.filter((x) => x.id !== id));
+    if (grupoAtivo === id) setGrupoAtivo(null);
+    router.refresh();
+  }
 
   const cartaoCompartilhando = compartilhandoId
     ? meus.find((c) => c.id === compartilhandoId)
@@ -167,7 +230,10 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
   }, [meus]);
 
   const q = busca.trim();
-  const meusFiltrados = useMemo(() => meus.filter((c) => bate(c, q, tagAtiva)), [meus, q, tagAtiva]);
+  const meusFiltrados = useMemo(
+    () => meus.filter((c) => bate(c, q, tagAtiva) && (!grupoAtivo || c.grupo_id === grupoAtivo)),
+    [meus, q, tagAtiva, grupoAtivo]
+  );
   const recebidosFiltrados = useMemo(() => recebidos.filter((c) => bate(c, q, tagAtiva)), [recebidos, q, tagAtiva]);
   const meusCompartilhados = useMemo(
     () => meus.filter((c) => compartilheiMap[c.id] && bate(c, q, tagAtiva)),
@@ -175,6 +241,7 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
   );
 
   const totalCompartilhados = meus.filter((c) => compartilheiMap[c.id]).length + recebidos.length;
+  const grupoMap = useMemo(() => Object.fromEntries(grupos.map((g) => [g.id, g])), [grupos]);
 
   return (
     <>
@@ -202,6 +269,103 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
           </button>
         )}
       </div>
+
+      {/* Grupos */}
+      {(grupos.length > 0 || novoGrupoAberto) && (
+        <div className="mb-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <button
+              onClick={() => setGrupoAtivo(null)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition ${
+                !grupoAtivo ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              <FolderOpen size={11} /> Todos
+            </button>
+            {grupos.map((g) => {
+              const cor = COR_MAP[g.cor] ?? COR_MAP.indigo;
+              const ativo = grupoAtivo === g.id;
+              return (
+                <div key={g.id} className="relative group/g shrink-0">
+                  <button
+                    onClick={() => setGrupoAtivo(ativo ? null : g.id)}
+                    className={`flex items-center gap-1.5 pl-2.5 pr-7 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition border-2 ${
+                      ativo ? `${cor.bg} ${cor.text} ${cor.border}` : `bg-gray-100 text-gray-600 border-transparent hover:bg-gray-200`
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${cor.dot}`} />
+                    {g.nome}
+                  </button>
+                  <button
+                    onClick={() => deletarGrupo(g.id)}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/g:opacity-100 text-gray-400 hover:text-red-500 transition"
+                    title="Deletar grupo"
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              );
+            })}
+            <button
+              onClick={() => setNovoGrupoAberto(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 whitespace-nowrap shrink-0 transition"
+            >
+              <Plus size={12} /> Novo grupo
+            </button>
+          </div>
+
+          {novoGrupoAberto && (
+            <div className="mt-2 bg-white border rounded-2xl p-3 flex flex-col gap-2 shadow-sm">
+              <input
+                autoFocus
+                type="text"
+                placeholder="Nome do grupo"
+                value={novoGrupoNome}
+                onChange={(e) => setNovoGrupoNome(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") criarGrupo(); if (e.key === "Escape") setNovoGrupoAberto(false); }}
+                className="text-sm border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {CORES.map((c) => {
+                  const cor = COR_MAP[c];
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setNovoGrupoCor(c)}
+                      className={`w-6 h-6 rounded-full ${cor.dot} transition ring-2 ring-offset-1 ${novoGrupoCor === c ? "ring-gray-700" : "ring-transparent"}`}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={criarGrupo}
+                  disabled={salvandoGrupo || !novoGrupoNome.trim()}
+                  className="flex-1 bg-indigo-600 text-white text-xs font-semibold py-2 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition flex items-center justify-center gap-1"
+                >
+                  <Check size={13} /> Criar
+                </button>
+                <button
+                  onClick={() => { setNovoGrupoAberto(false); setNovoGrupoNome(""); }}
+                  className="px-4 text-xs text-gray-500 border rounded-xl hover:bg-gray-50 transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {grupos.length === 0 && !novoGrupoAberto && (
+        <button
+          onClick={() => setNovoGrupoAberto(true)}
+          className="flex items-center gap-1.5 text-xs text-indigo-500 hover:text-indigo-700 mb-3 font-medium transition"
+        >
+          <FolderOpen size={13} /> Criar grupo para organizar cartões
+        </button>
+      )}
 
       {/* Tags filtro */}
       {todasTags.length > 0 && (
@@ -277,6 +441,7 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap }: Prop
                 key={cartao.id}
                 cartao={cartao}
                 onShare={() => setCompartilhandoId(cartao.id)}
+                grupoMap={grupoMap}
               />
             ))}
           </div>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Camera, X, Loader2, ScanLine, FlipHorizontal, Globe, Lock } from "lucide-react";
+import { ArrowLeft, Camera, X, Loader2, ScanLine, FlipHorizontal, Globe, Lock, FolderOpen } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -32,6 +32,14 @@ export default function NovoCartaoPage() {
   });
   const [tags, setTags] = useState<string[]>([]);
   const [visibilidade, setVisibilidade] = useState<"privado" | "publico">("privado");
+  const [grupoId, setGrupoId] = useState<string | null>(null);
+  const [grupos, setGrupos] = useState<{ id: string; nome: string; cor: string }[]>([]);
+
+  useEffect(() => {
+    createClient().from("grupos").select("id, nome, cor").order("created_at").then(({ data }) => {
+      if (data) setGrupos(data);
+    });
+  }, []);
 
   async function handleFotoFile(file: File, previewUrl: string, alvo: CropAlvo) {
     if (alvo === "frente") {
@@ -116,6 +124,7 @@ export default function NovoCartaoPage() {
       tags,
       origem: foto ? "ocr" : "manual",
       visibilidade,
+      grupo_id: grupoId,
     });
 
     if (error) {
@@ -293,6 +302,32 @@ export default function NovoCartaoPage() {
               ))}
             </div>
           </div>
+
+          {/* Grupo */}
+          {grupos.length > 0 && (
+            <div className="bg-white rounded-2xl border p-4 flex flex-col gap-2">
+              <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5"><FolderOpen size={15} className="text-indigo-400" /> Grupo</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGrupoId(null)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${!grupoId ? "border-gray-700 bg-gray-100 text-gray-800" : "border-gray-200 text-gray-500"}`}
+                >
+                  Nenhum
+                </button>
+                {grupos.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setGrupoId(g.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${grupoId === g.id ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600"}`}
+                  >
+                    {g.nome}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"

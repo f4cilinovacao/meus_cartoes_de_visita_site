@@ -16,11 +16,11 @@ export default async function CartoesPage() {
 
   const avatar = user.user_metadata?.avatar_url ?? null;
 
-  // Busca meus cartões e compartilhamentos em paralelo
-  const [{ data: meus }, { data: partilhasRecebidas }, { data: partilhasFeitas }] = await Promise.all([
+  // Busca meus cartões, compartilhamentos e grupos em paralelo
+  const [{ data: meus }, { data: partilhasRecebidas }, { data: partilhasFeitas }, { data: grupos }] = await Promise.all([
     supabase
       .from("cartoes")
-      .select("id, nome, empresa, cargo, email, telefone, foto_url, tags, visibilidade")
+      .select("id, nome, empresa, cargo, email, telefone, foto_url, tags, visibilidade, grupo_id")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     // Cartões compartilhados COMIGO
@@ -33,6 +33,12 @@ export default async function CartoesPage() {
       .from("cartoes_compartilhados")
       .select("cartao_id, shared_with_email")
       .eq("owner_id", user.id),
+    // Grupos do usuário
+    supabase
+      .from("grupos")
+      .select("id, nome, cor")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true }),
   ]);
 
   // Busca os cartões recebidos (RLS permite via policy recipients_select_shared)
@@ -96,6 +102,7 @@ export default async function CartoesPage() {
           meus={meus ?? []}
           recebidos={recebidos}
           compartilheiMap={compartilheiMap}
+          grupos={grupos ?? []}
         />
       </main>
     </div>
