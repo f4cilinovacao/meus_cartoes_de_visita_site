@@ -63,8 +63,8 @@ export default async function CartoesPage() {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <Image src="/logo.svg" alt="Meus Cartões de Visita" width={200} height={50} className="w-36 sm:w-52" />
           <div className="flex items-center gap-2">
-            <Link href="/explorar" className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition px-1">
-              Explorar
+            <Link href="/explorar" className="flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl">
+              🔍 Explorar
             </Link>
             <Link href="/perfil" className="hover:opacity-80 transition">
               {avatar ? (

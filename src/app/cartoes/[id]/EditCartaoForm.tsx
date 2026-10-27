@@ -351,37 +351,37 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
               )}
             </div>
           )}
-        </div>
 
-        {/* Visibilidade */}
-        {editing ? (
-          <div className="bg-white rounded-2xl border p-4 flex flex-col gap-3">
-            <p className="text-sm font-medium text-gray-700">Visibilidade do cartão</p>
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                { val: "privado", icon: <Lock size={16} />, label: "Privado", desc: "Só você vê" },
-                { val: "publico", icon: <Globe size={16} />, label: "Público", desc: "Qualquer pessoa pode encontrar" },
-              ] as const).map(({ val, icon, label, desc }) => (
-                <button
-                  key={val}
-                  type="button"
-                  onClick={() => setVisibilidade(val)}
-                  className={`flex flex-col items-start gap-1 p-3 rounded-xl border-2 transition text-left ${visibilidade === val ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"}`}
-                >
-                  <span className={`flex items-center gap-1.5 font-semibold text-sm ${visibilidade === val ? "text-indigo-600" : "text-gray-700"}`}>
-                    {icon}{label}
-                  </span>
-                  <span className="text-xs text-gray-400">{desc}</span>
-                </button>
-              ))}
-            </div>
+          {/* Visibilidade — sempre visível */}
+          <div className="px-4 py-3">
+            <label className="text-sm text-gray-400 block mb-2">Visibilidade</label>
+            {editing ? (
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { val: "privado", icon: <Lock size={14} />, label: "Privado", desc: "Só você vê" },
+                  { val: "publico", icon: <Globe size={14} />, label: "Público", desc: "Qualquer pessoa pode encontrar" },
+                ] as const).map(({ val, icon, label, desc }) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setVisibilidade(val)}
+                    className={`flex flex-col items-start gap-1 p-3 rounded-xl border-2 transition text-left ${visibilidade === val ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <span className={`flex items-center gap-1.5 font-semibold text-sm ${visibilidade === val ? "text-indigo-600" : "text-gray-700"}`}>
+                      {icon}{label}
+                    </span>
+                    <span className="text-xs text-gray-400">{desc}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-sm text-gray-700">
+                {visibilidade === "publico" ? <Globe size={14} className="text-indigo-500" /> : <Lock size={14} className="text-gray-400" />}
+                <span>{visibilidade === "publico" ? "Público — qualquer pessoa pode encontrar" : "Privado — só você vê"}</span>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="flex items-center gap-1.5 text-xs text-gray-400 px-1">
-            {visibilidade === "publico" ? <Globe size={12} className="text-indigo-400" /> : <Lock size={12} />}
-            <span>{visibilidade === "publico" ? "Cartão público" : "Cartão privado"}</span>
-          </div>
-        )}
+        </div>
 
         {/* Histórico */}
         {!editing && (cartao.origem || cartao.created_at) && (
