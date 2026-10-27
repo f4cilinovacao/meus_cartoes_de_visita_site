@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe, Share2, FlipHorizontal } from "lucide-react";
+import { ArrowLeft, Camera, X, Loader2, Trash2, Mail, Phone, Globe, Share2, FlipHorizontal, Download } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -112,6 +112,36 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
   const fotoAtual = fotoPreview ?? cartao.foto_url;
   const fotoVersoAtual = fotoVersoPreview ?? cartao.foto_verso;
 
+  function exportarVCard() {
+    const escape = (s: string | null) => (s ?? "").replace(/[,;\\]/g, (c) => `\\${c}`);
+    const nomes = (cartao.nome ?? "").trim().split(" ");
+    const sobrenome = nomes.length > 1 ? nomes.slice(1).join(" ") : "";
+    const nome = nomes[0] ?? "";
+    const linhas = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `N:${escape(sobrenome)};${escape(nome)};;;`,
+      `FN:${escape(cartao.nome)}`,
+      cartao.empresa ? `ORG:${escape(cartao.empresa)}` : "",
+      cartao.cargo ? `TITLE:${escape(cartao.cargo)}` : "",
+      cartao.email ? `EMAIL;TYPE=WORK:${cartao.email}` : "",
+      cartao.telefone ? `TEL;TYPE=WORK,VOICE:${cartao.telefone}` : "",
+      cartao.site ? `URL:${cartao.site}` : "",
+      cartao.endereco ? `ADR;TYPE=WORK:;;${escape(cartao.endereco)};;;;` : "",
+      cartao.instagram ? `X-SOCIALPROFILE;TYPE=instagram:${cartao.instagram}` : "",
+      cartao.notas ? `NOTE:${escape(cartao.notas)}` : "",
+      "END:VCARD",
+    ].filter(Boolean).join("\r\n");
+
+    const blob = new Blob([linhas], { type: "text/vcard;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(cartao.nome ?? "contato").replace(/\s+/g, "_")}.vcf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {compartilhando && (
@@ -133,13 +163,22 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
           </div>
           <div className="flex items-center gap-2">
             {!editing && (
-              <button
-                onClick={() => setCompartilhando(true)}
-                className="p-2 text-indigo-400 hover:text-indigo-600 transition"
-                title="Compartilhar"
-              >
-                <Share2 size={18} />
-              </button>
+              <>
+                <button
+                  onClick={exportarVCard}
+                  className="p-2 text-gray-400 hover:text-indigo-600 transition"
+                  title="Salvar nos contatos"
+                >
+                  <Download size={18} />
+                </button>
+                <button
+                  onClick={() => setCompartilhando(true)}
+                  className="p-2 text-indigo-400 hover:text-indigo-600 transition"
+                  title="Compartilhar"
+                >
+                  <Share2 size={18} />
+                </button>
+              </>
             )}
             <button
               onClick={handleDelete}
