@@ -49,17 +49,21 @@ function extrairDados(texto: string) {
   const emailMatch = texto.match(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
   const email = emailMatch?.[0] ?? "";
 
-  // Telefone: aceita formatos brasileiros e internacionais
-  const telMatch = texto.match(/(\+?55[\s-]?)?(\(?\d{2}\)?[\s-]?)(\d{4,5}[\s-]?\d{4})/);
+  // Telefone: com DDD "(11) 99999-0000" ou sem DDD "2204-2194" / "99855-2909"
+  const telMatch = texto.match(/(\+?55[\s-]?)?(\(?\d{2}\)?[\s-]?)?\d{4,5}[\s-]\d{4}/);
   const telefone = telMatch?.[0]?.trim() ?? "";
 
   // Site
   const siteMatch = texto.match(/(https?:\/\/[^\s]+|www\.[^\s]+)/i);
   const site = siteMatch?.[0] ?? "";
 
-  // Instagram
-  const igMatch = texto.match(/@[\w.]+/);
-  const instagram = igMatch?.[0] ?? "";
+  // Instagram: @handle que NÃO é parte de um email (não precedido por \w)
+  // e não contém extensão de domínio (.com, .br, etc.)
+  const igMatch = texto.match(/(?<![.\w])@([\w.]{2,30})(?!\.[a-z]{2,})/i);
+  const igRaw = igMatch ? `@${igMatch[1]}` : "";
+  // Descarta se o handle capturado for igual ao domínio do email detectado
+  const emailDomain = emailMatch?.[0]?.split("@")[1] ?? "";
+  const instagram = igRaw && igRaw.slice(1) !== emailDomain ? igRaw : "";
 
   // Remove linhas que são email, telefone, site ou instagram (sobram nome/empresa/cargo)
   const TOKENS_REMOVIDOS = new Set([email, telefone, site, instagram].filter(Boolean));
