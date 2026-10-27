@@ -9,12 +9,14 @@ export default async function PerfilPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: meusCartoes }, { data: meusCompartilhados }] = await Promise.all([
+  const [{ data: meusCartoes }, { data: meusCompartilhados, error: errComp }] = await Promise.all([
     supabase.from("cartoes").select("id").eq("user_id", user.id),
-    supabase.from("cartoes_compartilhados").select("id").eq("owner_id", user.id),
+    supabase.from("cartoes_compartilhados").select("cartao_id").eq("owner_id", user.id),
   ]);
+  if (errComp) console.error("[perfil] compartilhados error:", errComp.message);
   const totalCartoes = meusCartoes?.length ?? 0;
-  const compartilhados = meusCompartilhados?.length ?? 0;
+  // Conta cartões únicos compartilhados (um cartão pode ter vários destinatários)
+  const compartilhados = new Set(meusCompartilhados?.map((r) => r.cartao_id) ?? []).size;
 
   return (
     <PerfilClient
