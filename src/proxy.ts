@@ -31,8 +31,8 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const publicPaths = ["/", "/login", "/cadastro"];
-  const isPublic = publicPaths.includes(pathname);
+  const publicPaths = ["/", "/login", "/cadastro", "/privacidade", "/termos"];
+  const isPublic = publicPaths.includes(pathname) || pathname.startsWith("/api/auth");
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
