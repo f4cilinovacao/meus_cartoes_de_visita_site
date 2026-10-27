@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Camera, Loader2, CreditCard, Share2, Mail, Lock, Trash2, Check } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, CreditCard, Share2, Mail, Lock, Check } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -31,9 +31,6 @@ export default function PerfilClient({ userId, email, nomeInicial, avatarInicial
   const [novaSenha, setNovaSenha] = useState("");
   const [savingSenha, setSavingSenha] = useState(false);
   const [senhaMsg, setSenhaMsg] = useState("");
-
-  const [deletando, setDeletando] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function handleSaveNome() {
     setSavingNome(true);
@@ -80,17 +77,6 @@ export default function PerfilClient({ userId, email, nomeInicial, avatarInicial
     if (!error) setNovaSenha("");
   }
 
-  async function handleDeletarConta() {
-    setDeletando(true);
-    const res = await fetch("/api/auth/deletar-conta", { method: "DELETE" });
-    if (res.ok) {
-      router.push("/");
-    } else {
-      setDeletando(false);
-      setConfirmDelete(false);
-      alert("Erro ao deletar conta. Tente novamente.");
-    }
-  }
 
   const isGoogle = provider === "google";
 
@@ -214,37 +200,6 @@ export default function PerfilClient({ userId, email, nomeInicial, avatarInicial
             {senhaMsg && <p className="text-xs text-indigo-600">{senhaMsg}</p>}
           </div>
         )}
-
-        {/* Zona de perigo */}
-        <div className="bg-white rounded-2xl border border-red-100 p-5 flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-red-500 font-semibold text-sm">
-            <Trash2 size={16} />
-            Deletar conta
-          </div>
-          <p className="text-xs text-gray-500">Todos os seus cartões e dados serão removidos permanentemente.</p>
-          {!confirmDelete ? (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="self-start text-sm text-red-500 border border-red-200 px-4 py-2 rounded-xl hover:bg-red-50 transition"
-            >
-              Deletar minha conta
-            </button>
-          ) : (
-            <div className="flex items-center gap-3">
-              <p className="text-sm text-red-600 font-medium">Tem certeza?</p>
-              <button
-                onClick={handleDeletarConta}
-                disabled={deletando}
-                className="bg-red-500 text-white text-sm px-4 py-2 rounded-xl font-semibold hover:bg-red-600 transition flex items-center gap-1.5 disabled:opacity-50"
-              >
-                {deletando ? <Loader2 size={14} className="animate-spin" /> : "Sim, deletar"}
-              </button>
-              <button onClick={() => setConfirmDelete(false)} className="text-sm text-gray-400 hover:text-gray-600">
-                Cancelar
-              </button>
-            </div>
-          )}
-        </div>
 
       </div>
     </div>

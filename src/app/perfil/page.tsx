@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import PerfilClient from "./PerfilClient";
 import CartaoVirtualConfig from "./CartaoVirtualConfig";
+import DeletarContaSection from "./DeletarContaSection";
 
 export const instant = false;
 
@@ -37,6 +38,7 @@ export default async function PerfilPage() {
           perfilAtual={perfilPublico}
           emailUsuario={user.email ?? ""}
         />
+        <DeletarContaSection />
       </div>
     </div>
   );
