@@ -32,7 +32,7 @@ export default function NovoCartaoPage() {
   });
   const [tags, setTags] = useState<string[]>([]);
   const [visibilidade, setVisibilidade] = useState<"privado" | "publico">("privado");
-  const [grupoId, setGrupoId] = useState<string | null>(null);
+  const [grupoIds, setGrupoIds] = useState<string[]>([]);
   const [grupos, setGrupos] = useState<{ id: string; nome: string; cor: string }[]>([]);
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function NovoCartaoPage() {
       fotoVerso ? uploadFoto(fotoVerso, user.id) : Promise.resolve(null),
     ]);
 
-    const { error } = await supabase.from("cartoes").insert({
+    const { data: novoCartao, error } = await supabase.from("cartoes").insert({
       user_id: user.id,
       ...form,
       foto_url,
@@ -124,13 +124,18 @@ export default function NovoCartaoPage() {
       tags,
       origem: foto ? "ocr" : "manual",
       visibilidade,
-      grupo_id: grupoId,
-    });
+    }).select("id").single();
 
-    if (error) {
+    if (error || !novoCartao) {
       alert("Erro ao salvar cartão.");
       setSaving(false);
       return;
+    }
+
+    if (grupoIds.length > 0) {
+      await supabase.from("cartoes_grupos").insert(
+        grupoIds.map((gid) => ({ cartao_id: novoCartao.id, grupo_id: gid }))
+      );
     }
 
     router.push("/cartoes");
@@ -306,25 +311,21 @@ export default function NovoCartaoPage() {
           {/* Grupo */}
           {grupos.length > 0 && (
             <div className="bg-white rounded-2xl border p-4 flex flex-col gap-2">
-              <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5"><FolderOpen size={15} className="text-indigo-400" /> Grupo</p>
+              <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5"><FolderOpen size={15} className="text-indigo-400" /> Grupos <span className="text-xs font-normal text-gray-400">(pode escolher mais de um)</span></p>
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setGrupoId(null)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${!grupoId ? "border-gray-700 bg-gray-100 text-gray-800" : "border-gray-200 text-gray-500"}`}
-                >
-                  Nenhum
-                </button>
-                {grupos.map((g) => (
-                  <button
-                    key={g.id}
-                    type="button"
-                    onClick={() => setGrupoId(g.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${grupoId === g.id ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600"}`}
-                  >
-                    {g.nome}
-                  </button>
-                ))}
+                {grupos.map((g) => {
+                  const ativo = grupoIds.includes(g.id);
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setGrupoIds((ids) => ativo ? ids.filter((x) => x !== g.id) : [...ids, g.id])}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${ativo ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600"}`}
+                    >
+                      {ativo && "✓ "}{g.nome}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

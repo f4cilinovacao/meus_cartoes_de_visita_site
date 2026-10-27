@@ -20,7 +20,7 @@ interface Cartao {
   foto_url: string | null;
   tags?: string[] | null;
   visibilidade?: string | null;
-  grupo_id?: string | null;
+  cartoes_grupos?: { grupo_id: string }[] | null;
 }
 
 interface Grupo {
@@ -56,12 +56,13 @@ function VisibilidadeBadge({ visibilidade }: { visibilidade?: string | null }) {
   );
 }
 
-function CartaoCard({ cartao, onShare, ownerLabel, badge, grupoMap }: {
+function CartaoCard({ cartao, onShare, ownerLabel, badge, grupoMap, maxGrupos = 2 }: {
   cartao: Cartao;
   onShare?: () => void;
   ownerLabel?: string;
   badge?: React.ReactNode;
   grupoMap?: Record<string, Grupo>;
+  maxGrupos?: number;
 }) {
   const inicial = (cartao.nome ?? cartao.empresa ?? "?")[0].toUpperCase();
 
@@ -121,17 +122,18 @@ function CartaoCard({ cartao, onShare, ownerLabel, badge, grupoMap }: {
             </div>
           )}
 
-          <div className="absolute bottom-2 left-2 flex items-center gap-1">
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 flex-wrap max-w-[90%]">
             <VisibilidadeBadge visibilidade={cartao.visibilidade} />
-            {cartao.grupo_id && grupoMap?.[cartao.grupo_id] && (() => {
-              const g = grupoMap[cartao.grupo_id!]!;
+            {cartao.cartoes_grupos?.slice(0, maxGrupos).map((cg) => {
+              const g = grupoMap?.[cg.grupo_id];
+              if (!g) return null;
               const cor = COR_MAP[g.cor] ?? COR_MAP.indigo;
               return (
-                <span className={`flex items-center gap-0.5 ${cor.bg} ${cor.text} text-[10px] px-1.5 py-0.5 rounded-full font-semibold`}>
+                <span key={cg.grupo_id} className={`flex items-center gap-0.5 ${cor.bg} ${cor.text} text-[10px] px-1.5 py-0.5 rounded-full font-semibold`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${cor.dot}`} />{g.nome}
                 </span>
               );
-            })()}
+            })}
           </div>
 
           {badge && (
@@ -233,7 +235,7 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap, grupos
 
   const q = busca.trim();
   const meusFiltrados = useMemo(
-    () => meus.filter((c) => bate(c, q, tagAtiva) && (!grupoAtivo || c.grupo_id === grupoAtivo)),
+    () => meus.filter((c) => bate(c, q, tagAtiva) && (!grupoAtivo || c.cartoes_grupos?.some((cg) => cg.grupo_id === grupoAtivo))),
     [meus, q, tagAtiva, grupoAtivo]
   );
   const recebidosFiltrados = useMemo(() => recebidos.filter((c) => bate(c, q, tagAtiva)), [recebidos, q, tagAtiva]);

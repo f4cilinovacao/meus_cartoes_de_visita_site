@@ -20,7 +20,7 @@ export default async function CartoesPage() {
   const [{ data: meus }, { data: partilhasRecebidas }, { data: partilhasFeitas }, { data: grupos }] = await Promise.all([
     supabase
       .from("cartoes")
-      .select("id, nome, empresa, cargo, email, telefone, foto_url, tags, visibilidade, grupo_id")
+      .select("id, nome, empresa, cargo, email, telefone, foto_url, tags, visibilidade, cartoes_grupos(grupo_id)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     // Cartões compartilhados COMIGO

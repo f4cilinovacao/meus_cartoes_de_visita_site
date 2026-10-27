@@ -13,7 +13,7 @@ export default async function CartaoPage({ params }: { params: Promise<{ id: str
 
   const { data: cartao } = await supabase
     .from("cartoes")
-    .select("*")
+    .select("*, cartoes_grupos(grupo_id)")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();

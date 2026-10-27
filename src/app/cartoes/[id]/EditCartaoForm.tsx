@@ -29,7 +29,7 @@ type Cartao = {
   created_at: string | null;
   user_id: string;
   visibilidade: string | null;
-  grupo_id: string | null;
+  cartoes_grupos?: { grupo_id: string }[] | null;
 };
 
 export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
@@ -46,7 +46,7 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
   const [fotoVersoPreview, setFotoVersoPreview] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>(cartao.tags ?? []);
   const [visibilidade, setVisibilidade] = useState<"privado" | "publico">((cartao.visibilidade as "privado" | "publico") ?? "privado");
-  const [grupoId, setGrupoId] = useState<string | null>(cartao.grupo_id);
+  const [grupoIds, setGrupoIds] = useState<string[]>((cartao.cartoes_grupos ?? []).map((cg) => cg.grupo_id));
   const [grupos, setGrupos] = useState<{ id: string; nome: string; cor: string }[]>([]);
 
   useEffect(() => {
@@ -111,7 +111,12 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
       if (novaVersoUrl) foto_verso = novaVersoUrl;
     }
 
-    await supabase.from("cartoes").update({ ...form, foto_url, foto_verso, tags, visibilidade, grupo_id: grupoId }).eq("id", cartao.id);
+    await supabase.from("cartoes").update({ ...form, foto_url, foto_verso, tags, visibilidade }).eq("id", cartao.id);
+    // Atualiza grupos: apaga todos e reinsere
+    await supabase.from("cartoes_grupos").delete().eq("cartao_id", cartao.id);
+    if (grupoIds.length > 0) {
+      await supabase.from("cartoes_grupos").insert(grupoIds.map((gid) => ({ cartao_id: cartao.id, grupo_id: gid })));
+    }
     setSaving(false);
     setEditing(false);
     router.refresh();
@@ -394,38 +399,39 @@ export default function EditCartaoForm({ cartao }: { cartao: Cartao }) {
           {/* Grupo */}
           {editing && (
             <div className="px-4 py-3">
-              <label className="text-sm text-gray-400 block mb-2 flex items-center gap-1"><FolderOpen size={13} /> Grupo</label>
+              <label className="text-sm text-gray-400 block mb-2">
+                <span className="flex items-center gap-1"><FolderOpen size={13} /> Grupos <span className="font-normal text-gray-300">(pode escolher mais de um)</span></span>
+              </label>
               {grupos.length === 0 ? (
                 <a href="/cartoes" className="text-xs text-indigo-500 hover:underline">
                   Nenhum grupo criado — crie grupos na lista de cartões
                 </a>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setGrupoId(null)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${!grupoId ? "border-gray-700 bg-gray-100 text-gray-800" : "border-gray-200 text-gray-500"}`}
-                  >
-                    Nenhum
-                  </button>
-                  {grupos.map((g) => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => setGrupoId(g.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${grupoId === g.id ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600"}`}
-                    >
-                      {g.nome}
-                    </button>
-                  ))}
+                  {grupos.map((g) => {
+                    const ativo = grupoIds.includes(g.id);
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setGrupoIds((ids) => ativo ? ids.filter((x) => x !== g.id) : [...ids, g.id])}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium border-2 transition ${ativo ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600"}`}
+                      >
+                        {ativo && "✓ "}{g.nome}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
           )}
-          {!editing && grupoId && grupos.find((g) => g.id === grupoId) && (
-            <div className="px-4 py-3 flex items-center gap-1.5 text-sm text-gray-700">
-              <FolderOpen size={14} className="text-indigo-400" />
-              <span>{grupos.find((g) => g.id === grupoId)?.nome}</span>
+          {!editing && grupoIds.length > 0 && (
+            <div className="px-4 py-3 flex items-center gap-1.5 flex-wrap">
+              <FolderOpen size={14} className="text-indigo-400 shrink-0" />
+              {grupoIds.map((gid) => {
+                const g = grupos.find((x) => x.id === gid);
+                return g ? <span key={gid} className="text-sm text-gray-700">{g.nome}</span> : null;
+              }).reduce((acc: React.ReactNode[], el, i) => i === 0 ? [el] : [...acc, <span key={`sep-${i}`} className="text-gray-300">·</span>, el], [])}
             </div>
           )}
         </div>
