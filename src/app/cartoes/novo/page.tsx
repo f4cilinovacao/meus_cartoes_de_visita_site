@@ -169,7 +169,6 @@ export default function NovoCartaoPage() {
               ref={fileRef}
               type="file"
               accept="image/*"
-              capture="environment"
               className="hidden"
               onChange={handleFileInput}
             />
