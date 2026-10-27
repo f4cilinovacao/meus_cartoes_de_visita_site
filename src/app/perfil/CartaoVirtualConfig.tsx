@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, ExternalLink, Check, Globe, Copy, Eye, QrCode } from "lucide-react";
+import { Loader2, ExternalLink, Check, Globe, Copy, Eye, QrCode, BarChart2 } from "lucide-react";
 import QRCode from "react-qr-code";
 
 interface PerfilPublico {
@@ -65,7 +65,36 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
   const [sucesso, setSucesso] = useState(false);
   const [copiado, setCopiado] = useState<"normal" | "curto" | null>(null);
   const [mostrarQR, setMostrarQR] = useState(false);
+  const [mostrarAnalytics, setMostrarAnalytics] = useState(false);
+  const [analytics, setAnalytics] = useState<{ direto: number; qr: number; curto: number; ultimos7: { dia: string; total: number }[] } | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mostrarAnalytics || !perfilAtual || analytics) return;
+    const supabase = createClient();
+    supabase
+      .from("perfil_views")
+      .select("origem, viewed_at")
+      .then(({ data }) => {
+        if (!data) return;
+        const cnt = { direto: 0, qr: 0, curto: 0 };
+        const dias: Record<string, number> = {};
+        const agora = new Date();
+        for (const row of data) {
+          if (row.origem in cnt) cnt[row.origem as keyof typeof cnt]++;
+          const diff = Math.floor((agora.getTime() - new Date(row.viewed_at).getTime()) / 86400000);
+          if (diff < 7) {
+            const label = new Date(row.viewed_at).toLocaleDateString("pt-BR", { weekday: "short", day: "numeric" });
+            dias[label] = (dias[label] ?? 0) + 1;
+          }
+        }
+        // últimos 7 dias ordenados
+        const ultimos7 = Object.entries(dias)
+          .map(([dia, total]) => ({ dia, total }))
+          .slice(-7);
+        setAnalytics({ ...cnt, ultimos7 });
+      });
+  }, [mostrarAnalytics, perfilAtual, analytics]);
 
   function baixarQR() {
     const svg = qrRef.current?.querySelector("svg");
@@ -124,6 +153,7 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
   const BASE = "meuscartoesdevisita.com.br";
   const urlNormal = `https://${BASE}/u/${form.username || "username"}`;
   const urlCurta = form.short_code ? `https://${BASE}/s/${form.short_code}` : null;
+  const urlQR = `https://${BASE}/u/${form.username || "username"}?ref=qr`;
 
   return (
     <div className="bg-white rounded-2xl border p-5 flex flex-col gap-4">
@@ -171,26 +201,83 @@ export default function CartaoVirtualConfig({ userId, perfilAtual, emailUsuario,
 
       {/* Stats + QR */}
       {perfilAtual && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-1.5 text-sm text-gray-500">
             <Eye size={15} className="text-indigo-400" />
             <span><strong className="text-gray-800">{perfilAtual.views ?? 0}</strong> visualizações</span>
           </div>
-          <button
-            type="button"
-            onClick={() => setMostrarQR((v) => !v)}
-            className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition"
-          >
-            <QrCode size={15} />
-            {mostrarQR ? "Ocultar QR" : "Ver QR Code"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setMostrarAnalytics((v) => !v)}
+              className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition"
+            >
+              <BarChart2 size={15} />
+              {mostrarAnalytics ? "Ocultar stats" : "Ver stats"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMostrarQR((v) => !v)}
+              className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition"
+            >
+              <QrCode size={15} />
+              {mostrarQR ? "Ocultar QR" : "Ver QR"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Analytics panel */}
+      {mostrarAnalytics && perfilAtual && (
+        <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-3">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Origem das visitas</p>
+          {!analytics ? (
+            <div className="flex items-center gap-2 text-xs text-gray-400"><Loader2 size={13} className="animate-spin" /> Carregando...</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { label: "Link direto", key: "direto", color: "bg-indigo-100 text-indigo-700" },
+                  { label: "Link curto", key: "curto", color: "bg-blue-100 text-blue-700" },
+                  { label: "QR Code", key: "qr", color: "bg-green-100 text-green-700" },
+                ] as const).map(({ label, key, color }) => (
+                  <div key={key} className={`rounded-xl p-3 flex flex-col items-center gap-1 ${color}`}>
+                    <span className="text-xl font-bold">{analytics[key]}</span>
+                    <span className="text-xs font-medium text-center leading-tight">{label}</span>
+                  </div>
+                ))}
+              </div>
+              {analytics.ultimos7.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 mb-2">Últimos 7 dias</p>
+                  <div className="flex items-end gap-1 h-16">
+                    {analytics.ultimos7.map(({ dia, total }) => {
+                      const max = Math.max(...analytics.ultimos7.map((d) => d.total), 1);
+                      return (
+                        <div key={dia} className="flex flex-col items-center gap-1 flex-1" title={`${dia}: ${total}`}>
+                          <div
+                            className="w-full bg-indigo-400 rounded-t-md transition-all"
+                            style={{ height: `${Math.max(4, (total / max) * 52)}px` }}
+                          />
+                          <span className="text-[9px] text-gray-400 truncate w-full text-center">{dia}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {analytics.ultimos7.length === 0 && (
+                <p className="text-xs text-gray-400 italic">Nenhuma visita nos últimos 7 dias.</p>
+              )}
+            </>
+          )}
         </div>
       )}
 
       {mostrarQR && urlCurta && (
         <div className="flex flex-col items-center gap-3 bg-gray-50 rounded-2xl p-4">
           <div ref={qrRef} className="bg-white p-3 rounded-xl shadow-sm">
-            <QRCode value={urlCurta} size={160} />
+            <QRCode value={urlQR} size={160} />
           </div>
           <p className="text-xs text-gray-400 text-center">{BASE}/s/{form.short_code}</p>
           <button

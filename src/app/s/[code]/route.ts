@@ -16,5 +16,5 @@ export async function GET(_req: Request, { params }: { params: Promise<{ code: s
 
   if (!data) notFound();
 
-  redirect(`/u/${data.username}`);
+  redirect(`/u/${data.username}?ref=curto`);
 }

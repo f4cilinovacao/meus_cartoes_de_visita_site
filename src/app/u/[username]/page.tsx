@@ -6,8 +6,15 @@ import DarkModeToggle from "./DarkModeToggle";
 
 export const instant = false;
 
-export default async function PerfilPublicoPage({ params }: { params: Promise<{ username: string }> }) {
+export default async function PerfilPublicoPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ username: string }>;
+  searchParams: Promise<{ ref?: string }>;
+}) {
   const { username } = await params;
+  const { ref } = await searchParams;
   const supabase = await createClient();
 
   const { data: perfil } = await supabase
@@ -19,8 +26,10 @@ export default async function PerfilPublicoPage({ params }: { params: Promise<{ 
 
   if (!perfil) notFound();
 
-  // Incrementa views (fire-and-forget, não bloqueia render)
+  // Incrementa views e registra origem (fire-and-forget)
+  const origem = ref === "qr" ? "qr" : ref === "curto" ? "curto" : "direto";
   supabase.rpc("increment_profile_views", { profile_username: username.toLowerCase() });
+  supabase.from("perfil_views").insert({ user_id: perfil.id, origem });
 
   // vCard
   const escape = (s: string | null) => (s ?? "").replace(/[,;\\]/g, (c) => `\\${c}`);
