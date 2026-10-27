@@ -10,55 +10,64 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
-  const { email } = await request.json();
+  const body = await request.json().catch(() => null);
+  const email = body?.email;
   if (!email || typeof email !== "string") {
     return NextResponse.json({ error: "Email inválido" }, { status: 400 });
   }
 
   const emailNorm = email.trim().toLowerCase();
+  console.log("[compartilhar] user:", user.id, "cartao:", id, "email:", emailNorm);
+
   if (emailNorm === user.email?.toLowerCase()) {
     return NextResponse.json({ error: "Você não pode compartilhar consigo mesmo" }, { status: 400 });
   }
 
   // Verifica se o cartão pertence ao usuário
-  const { data: cartao } = await supabase
+  const { data: cartao, error: errCartao } = await supabase
     .from("cartoes")
     .select("id")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
 
-  if (!cartao) return NextResponse.json({ error: "Cartão não encontrado" }, { status: 404 });
+  if (errCartao || !cartao) {
+    console.error("[compartilhar] cartao não encontrado:", errCartao?.message);
+    return NextResponse.json({ error: "Cartão não encontrado" }, { status: 404 });
+  }
 
   // Verifica se já foi compartilhado com esse email
-  const { data: existing } = await supabase
+  const { data: existing, error: errExisting } = await supabase
     .from("cartoes_compartilhados")
     .select("id")
     .eq("cartao_id", id)
     .eq("shared_with_email", emailNorm)
-    .single();
+    .maybeSingle();
+
+  if (errExisting) console.error("[compartilhar] check existing error:", errExisting.message);
 
   if (existing) {
     return NextResponse.json({ error: "Já compartilhado com esse email" }, { status: 409 });
   }
 
-  // Tenta resolver o user_id pelo email
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: inserted, error: errInsert } = await supabase
+    .from("cartoes_compartilhados")
+    .insert({
+      cartao_id: id,
+      owner_id: user.id,
+      shared_with_id: null,
+      shared_with_email: emailNorm,
+    })
     .select("id")
-    .eq("email", emailNorm)
     .single();
 
-  const { error } = await supabase.from("cartoes_compartilhados").insert({
-    cartao_id: id,
-    owner_id: user.id,
-    shared_with_id: profile?.id ?? null,
-    shared_with_email: emailNorm,
-  });
+  if (errInsert) {
+    console.error("[compartilhar] insert error:", JSON.stringify(errInsert));
+    return NextResponse.json({ error: errInsert.message }, { status: 500 });
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ ok: true });
+  console.log("[compartilhar] sucesso, id:", inserted?.id);
+  return NextResponse.json({ ok: true, id: inserted?.id });
 }
 
 export async function DELETE(
