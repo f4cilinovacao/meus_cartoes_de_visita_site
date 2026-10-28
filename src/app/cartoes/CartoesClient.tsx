@@ -540,8 +540,8 @@ export default function CartoesClient({ meus, recebidos, compartilheiMap, grupos
               <Users size={40} className="text-gray-200 mb-3" />
               <p className="text-gray-700 font-medium mb-1">Nenhuma conexão ainda</p>
               <p className="text-sm text-gray-400 mb-4">Explore cartões de outras pessoas e se conecte</p>
-              <Link href="/explorar" className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition">
-                🔍 Explorar cartões
+              <Link href="/pessoas" className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition">
+                🔍 Encontrar pessoas
               </Link>
             </div>
           )}
